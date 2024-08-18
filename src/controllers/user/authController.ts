@@ -195,6 +195,10 @@ export const refreshAccessTokenController = async (req: Request, res: Response) 
     if (user === null) {
       return res.status(404).json({ error: 'User not found' });
     }
+    if (user.refreshToken !== refreshToken) {
+      res.clearCookie('refreshToken');
+      return res.status(401).json({ error: 'Invalid refresh token' });
+    }
 
     if (user.refreshToken === refreshToken) {
       const newAccessToken = generateAccessToken(user);
@@ -217,7 +221,7 @@ export const refreshAccessTokenController = async (req: Request, res: Response) 
 
       return res.status(200).json({message:"Access token updated"});
     } else {
-      return res.status(401).json({ error: 'Invalid refresh token' });
+      return res.status(403).json({ error: 'Invalid refresh token' });
     }
   } catch (err) {
     console.log(err)

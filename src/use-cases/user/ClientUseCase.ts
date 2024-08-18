@@ -29,4 +29,28 @@ export default class ClientUseCase {
       return null;
     }
   }
+
+
+  async findPost(id:string):Promise<IUserPost|null>{
+    const post=await this.clientrepository.findPost(id)
+    if(post==null){
+      return post
+    }
+    return post
+  }
+
+  async listposts (email:string): Promise<IUserPost[] | null | undefined>{
+    if (email) {
+      const checkUser = await this.userepository.findByEmail(email);
+      if (checkUser && checkUser._id) {
+        const getworks = await this.clientrepository.listUserPosts(
+          checkUser._id
+        );
+        return getworks;
+      }
+      return null;
+    }
+    return undefined;
+  }
+
 }

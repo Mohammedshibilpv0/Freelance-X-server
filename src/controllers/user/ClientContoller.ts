@@ -82,12 +82,55 @@ export const uploadImage = async (req: Request, res: Response) => {
 
       return res
         .status(200)
-        .send({ url: profile.trim(), message: "User profile updated" });
+        .send({data:{url: profile.trim()}, message: "User profile updated" });
     });
 
     blobStream.end(req.file.buffer);
   } catch (err) {
-    console.log(err);
     return res.status(500).json({ error: "internal server error" });
   }
 };
+
+
+export const getClientPost =async (req:Request,res:Response)=>{
+  try{
+    const {id}=req.params
+
+    const post = await clientusecase.findPost(id);
+    if (post == null) {
+      return res.status(400).json({ error: "Cannot found post" });
+    }
+    return res.status(200).json({ data: post });
+
+  }catch(err:any){
+    if (err.message.startsWith("Invalid post ID")) {
+      return res.status(400).json({ message: err.message });
+    }
+    return res.status(500).json({ error: "internal server error" });
+  }
+}
+
+export const userPosts = async (req:Request,res:Response)=>{
+  try{
+    
+    const {email}=req.params
+    const posts = await clientusecase.listposts(email);
+
+    if (posts && posts.length > 0) {
+      return res.status(200).json({ success: true, data: posts });
+    } else if (posts === null) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found or no posts available.",
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email or no data provided.",
+      });
+    }
+
+  }catch(err){
+    return res.status(500).json({ error: "internal server error" });
+  }
+}

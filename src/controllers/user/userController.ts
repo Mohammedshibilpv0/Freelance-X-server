@@ -41,6 +41,8 @@ export const editUserProfileImage = async (req: Request, res: Response) => {
     try {
      
       const { Data } = req.body;
+      console.log(req.file);
+      
       const parsedData = JSON.parse(Data);
       const email = parsedData.email
       if (!req.file) {

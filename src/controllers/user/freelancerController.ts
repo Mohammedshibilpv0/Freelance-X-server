@@ -85,7 +85,7 @@ export const findSinglegig = async (req: Request, res: Response) => {
     }
     return res.status(200).json({ data: gig });
   } catch (err: any) {
-    if (err.message.startsWith("Invalid category ID")) {
+    if (err.message.startsWith("Invalid gig ID")) {
       return res.status(400).json({ message: err.message });
     }
     return res.status(500).json({ error: "Internal server error" });

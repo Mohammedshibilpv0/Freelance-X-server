@@ -12,6 +12,7 @@ const userPostSchema = new Schema<IUserPost>({
     startBudget: { type: String, required: true },
     endBudget: { type: String, required: true }, 
     keyPoints: { type: [String], required: true }, 
+    skills: { type: [String], required: true }, 
     images: { type: [String], required: true }, 
     searchKey: { type: [String], required: true },
   });
