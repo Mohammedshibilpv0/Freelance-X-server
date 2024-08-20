@@ -19,8 +19,26 @@ export default class ClientRepository implements IClientRepository {
      return await UserPost.findById(id).populate('category').populate('subcategory')
   }
 
-  async listUserPosts(id: string): Promise<IUserPost[] | null> {
-    const posts = await UserPost.find({ userId: id }).exec();
-    return posts.length > 0 ? posts : null;
+  async listUserPosts(id: string,page:number,limit:number): Promise<{ posts: IUserPost[], totalPages: number }> {
+
+    const skip = (page - 1) * limit;
+    const [posts, totalPosts] = await Promise.all([
+      UserPost.find({ userId: id }).sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
+      UserPost.countDocuments().exec()
+    ]);
+    const totalPages = Math.ceil(totalPosts / limit);
+
+    return {posts,totalPages}
+  }
+
+  async allPost(page:number,limit:number): Promise<{ posts: IUserPost[], totalPages: number }> {
+    const skip = (page - 1) * limit;
+    const [posts, totalPosts] = await Promise.all([
+      UserPost.find().sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
+      UserPost.countDocuments().exec()
+    ]);
+    const totalPages = Math.ceil(totalPosts / limit);
+
+    return {posts,totalPages}
   }
 }

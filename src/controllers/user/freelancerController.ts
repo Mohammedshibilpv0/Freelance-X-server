@@ -55,12 +55,13 @@ export const createGig = async (req: Request, res: Response) => {
 export const freelanceWorks = async (req: Request, res: Response) => {
   try {
     const { email } = req.params;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 4;
+    const works = await freelancerusecae.listFreelancerWork(email,page,limit);
 
-    const works = await freelancerusecae.listFreelancerWork(email);
-
-    if (works && works.length > 0) {
-      return res.status(200).json({ success: true, data: works });
-    } else if (works === null) {
+    if (works && works.posts.length > 0) {
+      return res.status(200).json({ data: works.posts,totalPages:works.totalPages });
+    } else if (works?.posts === null) {
       return res.status(404).json({
         success: false,
         message: "User not found or no works available.",
@@ -91,3 +92,19 @@ export const findSinglegig = async (req: Request, res: Response) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const gigs = async (req:Request,res:Response)=>{
+  try{
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 9;
+
+    const gigs= await freelancerusecae.allGigs(page,limit)    
+    if(gigs.posts.length>=0){
+      return   res.status(200).json({data:gigs.posts,totalPages:gigs.totalPages})
+      }
+      return res.status(400).json({error:'No gigs found'})
+  }catch(err){
+    return res.status(500).json({ error: "Internal server error" });
+  
+  }
+}

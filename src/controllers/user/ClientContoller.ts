@@ -3,10 +3,11 @@ import ClientRepository from "../../infrastructure/repositories/ClientRepository
 import ClientUseCase from "../../use-cases/user/ClientUseCase";
 import { bucket } from "../../utils/firebase";
 import UserRepository from "../../infrastructure/repositories/UserRepository";
+import { error } from "console";
 
 const clientrepository = new ClientRepository();
-const userRepository= new UserRepository()
-const clientusecase = new ClientUseCase(clientrepository,userRepository);
+const userRepository = new UserRepository();
+const clientusecase = new ClientUseCase(clientrepository, userRepository);
 
 export const createPost = async (req: Request, res: Response) => {
   try {
@@ -22,10 +23,8 @@ export const createPost = async (req: Request, res: Response) => {
       searchKey,
       category,
       subcategory,
-  
     } = req.body.formData;
-    const {email}=req.body
-    
+    const { email } = req.body;
 
     const addPost = await clientusecase.userPost({
       projectName,
@@ -39,20 +38,21 @@ export const createPost = async (req: Request, res: Response) => {
       category,
       searchKey,
       subcategory,
-      email
+      email,
     });
-    if(addPost && addPost==undefined){
-     return  res.status(400).json({error:'Something wrong in creating the post'})
+    if (addPost && addPost == undefined) {
+      return res
+        .status(400)
+        .json({ error: "Something wrong in creating the post" });
     }
-    if(addPost && addPost== null ){
-      return  res.status(400).json({error:'User not found'})
+    if (addPost && addPost == null) {
+      return res.status(400).json({ error: "User not found" });
     }
-    return res.status(200).json({message:'successfully post added'})
+    return res.status(200).json({ message: "successfully post added" });
   } catch (err) {
     return res.status(500).json({ error: "internal server error" });
   }
 };
-
 
 export const uploadImage = async (req: Request, res: Response) => {
   try {
@@ -82,7 +82,10 @@ export const uploadImage = async (req: Request, res: Response) => {
 
       return res
         .status(200)
-        .send({data:{url: profile.trim()}, message: "User profile updated" });
+        .send({
+          data: { url: profile.trim() },
+          message: "User profile updated",
+        });
     });
 
     blobStream.end(req.file.buffer);
@@ -91,33 +94,32 @@ export const uploadImage = async (req: Request, res: Response) => {
   }
 };
 
-
-export const getClientPost =async (req:Request,res:Response)=>{
-  try{
-    const {id}=req.params
+export const getClientPost = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
 
     const post = await clientusecase.findPost(id);
     if (post == null) {
       return res.status(400).json({ error: "Cannot found post" });
     }
     return res.status(200).json({ data: post });
-
-  }catch(err:any){
+  } catch (err: any) {
     if (err.message.startsWith("Invalid post ID")) {
       return res.status(400).json({ message: err.message });
     }
     return res.status(500).json({ error: "internal server error" });
   }
-}
+};
 
-export const userPosts = async (req:Request,res:Response)=>{
-  try{
-    
-    const {email}=req.params
-    const posts = await clientusecase.listposts(email);
+export const userPosts = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.params;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 4;
+    const posts = await clientusecase.listposts(email,page,limit);
 
-    if (posts && posts.length > 0) {
-      return res.status(200).json({ success: true, data: posts });
+    if (posts && posts.posts.length > 0) {
+      return res.status(200).json({ success: true, data: posts ,totalPages:posts.totalPages});
     } else if (posts === null) {
       return res.status(404).json({
         success: false,
@@ -129,8 +131,22 @@ export const userPosts = async (req:Request,res:Response)=>{
         message: "Invalid email or no data provided.",
       });
     }
-
-  }catch(err){
+  } catch (err) {
     return res.status(500).json({ error: "internal server error" });
   }
-}
+};
+
+export const listPosts = async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 9;
+
+    const allPosts= await clientusecase.allPosts(page,limit)
+    if(allPosts.posts.length>=0){
+    return   res.status(200).json({data:allPosts.posts,totalPages:allPosts.totalPages})
+    }
+    return res.status(400).json({error:'No post found'})
+  } catch (err) {
+    return res.status(500).json({ error: "internal server error" });
+  }
+};

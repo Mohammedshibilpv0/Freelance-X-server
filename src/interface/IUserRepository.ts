@@ -10,5 +10,6 @@ export interface IUserRepository {
     FindOtpUser(email:string):Promise<IOtp|null>
     changeRole(email:string,role:string):Promise<IUser|null>
     subCategories(categoryId:string):Promise<ISubcategory[]|null>
+    findById(id:string):Promise<IUser|null>
     
 }

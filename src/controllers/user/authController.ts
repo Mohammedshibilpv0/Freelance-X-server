@@ -197,7 +197,7 @@ export const refreshAccessTokenController = async (req: Request, res: Response) 
     }
     if (user.refreshToken !== refreshToken) {
       res.clearCookie('refreshToken');
-      return res.status(401).json({ error: 'Invalid refresh token' });
+      return res.status(403).json({ error: 'Invalid refresh token' });
     }
 
     if (user.refreshToken === refreshToken) {

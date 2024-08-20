@@ -31,15 +31,15 @@ export default class ClientUseCase {
   }
 
   async listFreelancerWork(
-    email: string
-  ): Promise<IFreelancerGig[] | null | undefined> {
+    email: string,page:number,limit:number
+  ): Promise<{ posts: IFreelancerGig[], totalPages: number }| null | undefined> {
     if (email) {
       const checkUser = await this.userepository.findByEmail(email);
       if (checkUser && checkUser._id) {
-        const getworks = await this.freelancerrepository.listFreelancerWork(
-          checkUser._id
+        const {posts,totalPages} = await this.freelancerrepository.listFreelancerWork(
+          checkUser._id,page,limit
         );
-        return getworks;
+        return {posts,totalPages};
       }
       return null;
     }
@@ -52,5 +52,10 @@ export default class ClientUseCase {
       return gig;
     }
     return gig;
+  }
+
+  async allGigs(page:number,limit:number):Promise<{ posts: IFreelancerGig[], totalPages: number }>{
+    const {posts,totalPages}= await this.freelancerrepository.allGigs(page,limit)
+    return{ posts,totalPages}
   }
 }

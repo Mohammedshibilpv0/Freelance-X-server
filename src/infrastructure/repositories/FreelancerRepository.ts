@@ -13,9 +13,16 @@ export default class FreelancerRepository implements IFreelancerRepository {
     return await FreelancerGig.create(data);
   }
 
-  async listFreelancerWork(id: string): Promise<IFreelancerGig[] | null> {
-    const gigs = await FreelancerGig.find({ userId: id }).exec();
-    return gigs.length > 0 ? gigs : null;
+  async listFreelancerWork(id: string,page:number,limit:number): Promise< { posts: IFreelancerGig[], totalPages: number }> {
+
+    const skip = (page - 1) * limit;
+
+    const [posts, totalPosts] = await Promise.all([
+      FreelancerGig.find({userId: id}).sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
+      FreelancerGig.countDocuments().exec()
+    ]);
+    const totalPages = Math.ceil(totalPosts / limit);
+    return {posts,totalPages}
   }
 
   async findGig(id: string): Promise<IFreelancerGig | null> {
@@ -24,4 +31,15 @@ export default class FreelancerRepository implements IFreelancerRepository {
     }
     return await FreelancerGig.findById(id);
   }
+
+ async allGigs(page:number,limit:number): Promise<{ posts: IFreelancerGig[], totalPages: number }> {
+  const skip = (page - 1) * limit;
+  const [posts, totalPosts] = await Promise.all([
+    FreelancerGig.find().sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
+    FreelancerGig.countDocuments().exec()
+  ]);
+  const totalPages = Math.ceil(totalPosts / limit);
+
+  return {posts,totalPages}
+ }
 }

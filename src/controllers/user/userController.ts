@@ -117,3 +117,21 @@ export const subcategories = async (req:Request,res:Response)=>{
     return res.status(500).json({ error: "internal server error" });
   }
 }
+
+export const findUser =async (req:Request,res:Response)=>{
+  try{
+    const {id}=req.params
+
+    const user= await useruseCase.findUserById(id)
+    if(user==null || undefined){
+      return res.status(400).json({error:'User Not found'})
+    }
+    return res.status(200).json({data:user})
+
+  }catch(err:any){
+    if (err.message.startsWith("Invalid User ID")) {      
+      return res.status(400).json({ message: err.message });
+    }
+    return res.status(500).json({ error: "internal server error" });
+  }
+}

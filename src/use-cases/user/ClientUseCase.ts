@@ -39,18 +39,23 @@ export default class ClientUseCase {
     return post
   }
 
-  async listposts (email:string): Promise<IUserPost[] | null | undefined>{
+  async listposts (email:string,page:number,limit:number): Promise<{ posts: IUserPost[], totalPages: number }| null | undefined>{
     if (email) {
       const checkUser = await this.userepository.findByEmail(email);
       if (checkUser && checkUser._id) {
-        const getworks = await this.clientrepository.listUserPosts(
-          checkUser._id
+        const {posts,totalPages} = await this.clientrepository.listUserPosts(
+          checkUser._id,page,limit
         );
-        return getworks;
+        return {posts,totalPages};
       }
       return null;
     }
     return undefined;
+  }
+
+  async allPosts (page:number,limit:number):Promise<{ posts: IUserPost[], totalPages: number }>{
+    const {posts,totalPages}=await this.clientrepository.allPost(page,limit)
+    return {posts,totalPages}
   }
 
 }

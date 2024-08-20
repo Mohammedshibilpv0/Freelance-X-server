@@ -29,7 +29,10 @@ export default class UserRepository implements IUserRepository{
     
         
     }
-    async findById(id:string):Promise<IUser|null>{        
+    async findById(id:string):Promise<IUser|null>{     
+        if (!isValidObjectId(id)) {
+            throw new Error(`Invalid User ID: ${id}`);
+        }   
        return await UserModel.findById(id)
         
     }
