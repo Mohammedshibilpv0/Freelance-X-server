@@ -64,13 +64,17 @@ export const adminLogin = async (req: Request, res: Response) => {
 
 export const listallusers = async (req: Request, res: Response) => {
   try {
-    const users = await handleUser.findusers();
-    if (users) {
-      return res.status(200).json({ Data: users });
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 7;
+    const users = await handleUser.findusers(page,limit);
+    if (users && users.users.length > 0) {
+      return res.status(200).json({ success: true, data: users ,totalPages:users.totalPages});
+    } else{
+      return res.status(404).json({
+        success: false,
+        message: "User not found or no users available.",
+      });
     }
-    return res
-      .status(400)
-      .json({ error: "Something error please in find all users" });
   } catch (err) {
     return res.status(500).json({ error: "Internal server error" });
   }
@@ -109,11 +113,14 @@ export const addCategory = async (req: Request, res: Response) => {
 
 export const getCategory = async (req: Request, res: Response) => {
   try {
-    const categories = await handleCategory.listCategories();
-    if (categories.length < 0) {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 1;
+
+    const categories = await handleCategory.listCategories(page,limit);
+    if (categories.category.length < 0) {
       return res.status(400).json({ error: "Category not found" });
     }
-    return res.json({ categories });
+    return res.json({ categories:categories.category,totalPages:categories.totalPages });
   } catch (err) {
     return res.status(500).json({ error: "Internal server error" });
   }
@@ -177,7 +184,6 @@ export const deleteCategory = async (req: Request, res: Response) => {
 export const addSubcategory =async(req:Request,res:Response)=>{
   try{
     const {name,description,category}=req.body
-    console.log(req.body);
     const createSubcategory=await handleCategory.addSubCategory(name,description,category)
     if(createSubcategory==undefined){
       return res.status(400).json({error:'Something error in adding subcategory'})
@@ -191,11 +197,13 @@ export const addSubcategory =async(req:Request,res:Response)=>{
 
 export const getSubcategory= async(req:Request,res:Response)=>{
   try{
-    const getSubcategories=await handleCategory.getSubCategories()
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 7;
+    const getSubcategories=await handleCategory.getSubCategories(page,limit)
     if(getSubcategories==undefined){
       return res.status(400).json({error:'There is no subcategories'})
     }
-    return res.status(200).json({SubCategories:getSubcategories})
+    return res.status(200).json({SubCategories:getSubcategories.subCategory,totalPages:getSubcategories.totalPages})
   }catch(err){
     console.log(err);
     return res.status(500).json({ error: "Internal server error" });

@@ -9,6 +9,15 @@ const FormValuesSchema = new Schema<IFreelancerGig>({
     category: { type: String},
     createAt: { type: Date, default: Date.now },
     subcategory: { type:String}, 
+    status: { type: String, default:'Pending' },
+    requests: [
+      {
+          message: { type: String, required: true },
+          userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+          price:{type:Number,required: true},
+          status:{type:String,default:'Not request'}
+      }
+  ],
     deadline: { type: String, required: true },
     searchTags: { type: [String], required: true },
     images: { type: [String], required: true },

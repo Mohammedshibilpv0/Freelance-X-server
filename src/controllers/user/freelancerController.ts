@@ -97,7 +97,6 @@ export const gigs = async (req:Request,res:Response)=>{
   try{
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 9;
-
     const gigs= await freelancerusecae.allGigs(page,limit)    
     if(gigs.posts.length>=0){
       return   res.status(200).json({data:gigs.posts,totalPages:gigs.totalPages})
@@ -105,6 +104,37 @@ export const gigs = async (req:Request,res:Response)=>{
       return res.status(400).json({error:'No gigs found'})
   }catch(err){
     return res.status(500).json({ error: "Internal server error" });
-  
+  }
+}
+
+export const requestProject = async (req:Request,res:Response)=>{
+  try{
+
+    const {email,id,message,price}=req.body
+    const data= await freelancerusecae.requestProject(email,id,message,price)
+    console.log(data)
+    if(data){
+      return res.status(200).json({message:'Success'})
+    }
+    return res.status(400).json({error:'Something went wrong'})
+
+  }catch(err){
+    return res.status(500).json({ error: "internal server error" })
+  }
+}
+
+
+export const changeStatus= async (req:Request,res:Response)=>{
+  try{
+    const {id,status}=req.params
+    const data= await freelancerusecae.changeProjectStatus(id,status)
+    if(data==null){
+      return res.status(400).json({error:'Something went wrong'})
+    }
+    return res.status(200).json({data})
+
+  }catch(err){
+    console.log(err)
+    return res.status(500).json({ error: "internal server error" })
   }
 }

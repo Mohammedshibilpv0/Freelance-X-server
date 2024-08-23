@@ -58,4 +58,22 @@ export default class ClientUseCase {
     const {posts,totalPages}= await this.freelancerrepository.allGigs(page,limit)
     return{ posts,totalPages}
   }
+
+  async  requestProject (email:string,id:string,message:string,amount:string){
+    const user= await this.userepository.findByEmail(email)
+
+    if(user==null){
+      return user
+    }
+    const status='Pending'
+    const price =parseInt(amount)
+    const request= await this.freelancerrepository.requestProject({id,message,price,status},(user._id ?? ""))
+    return request
+  }
+
+
+  async changeProjectStatus (id:string,status:string):Promise<IFreelancerGig|null>{
+    return await this.freelancerrepository.changeStatus(id,status)
+   }
+
 }

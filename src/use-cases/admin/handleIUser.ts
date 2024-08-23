@@ -1,3 +1,4 @@
+import { IUser, IUserSummary } from "../../doamin/entities/User";
 import AdminRepository from "../../infrastructure/repositories/AdminRepository";
 import UserRepository from "../../infrastructure/repositories/UserRepository";
 
@@ -11,9 +12,9 @@ export default class handleIUser{
         this.adminrepository=adminrepository
     }
 
-    async findusers():Promise<object>{
-        const user=this.adminrepository.findUsers()
-        return user
+    async findusers(page:number,limit:number):Promise<{users:IUserSummary[],totalPages:number}|null>{
+        const {users,totalPages}=await this.adminrepository.findUsers(page,limit)
+        return {users,totalPages};
     }
 
     async updateUser(action: string, email: string) {

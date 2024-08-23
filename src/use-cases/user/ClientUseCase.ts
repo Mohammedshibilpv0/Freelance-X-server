@@ -33,9 +33,6 @@ export default class ClientUseCase {
 
   async findPost(id:string):Promise<IUserPost|null>{
     const post=await this.clientrepository.findPost(id)
-    if(post==null){
-      return post
-    }
     return post
   }
 
@@ -56,6 +53,22 @@ export default class ClientUseCase {
   async allPosts (page:number,limit:number):Promise<{ posts: IUserPost[], totalPages: number }>{
     const {posts,totalPages}=await this.clientrepository.allPost(page,limit)
     return {posts,totalPages}
+  }
+
+  async  requestProject (email:string,id:string,message:string,amount:string){
+    const user= await this.userepository.findByEmail(email)
+
+    if(user==null){
+      return user
+    }
+    const status='Pending'
+    const price =parseInt(amount)
+    const request= await this.clientrepository.requestProject({id,message,price,status},(user._id ?? ""))
+    return request
+  }
+
+  async changeProjectStatus (id:string,status:string):Promise<IUserPost|null>{
+   return await this.clientrepository.changeStatus(id,status)
   }
 
 }

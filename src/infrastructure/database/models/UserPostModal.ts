@@ -9,6 +9,15 @@ const userPostSchema = new Schema<IUserPost>({
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
     subcategory: { type: mongoose.Schema.Types.ObjectId, ref: 'Subcategory', required: true },
     deadline: { type: Date, required: true },
+    status: { type: String, default:'Pending' },
+    requests: [
+      {
+          message: { type: String, required: true },
+          userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+          price:{type:Number,required: true},
+          status:{type:String,default:'Not request'}
+      }
+  ],
     startBudget: { type: String, required: true },
     endBudget: { type: String, required: true }, 
     keyPoints: { type: [String], required: true }, 

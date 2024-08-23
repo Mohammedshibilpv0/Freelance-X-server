@@ -38,10 +38,10 @@ export default class CategoryUseCase {
     return { error: "An unknown error occurred" };
   }
 
-  async listCategories():Promise<ICategory[]|string>{
+  async listCategories(page:number,limit:number):Promise<{category:ICategory[],totalPages:number}>{
 
-    const categories=await  this.adminrepository.categories()
-    return categories
+    const {category,totalPages}=await  this.adminrepository.categories(page,limit)
+    return {category,totalPages}
     
   }
 
@@ -81,24 +81,13 @@ export default class CategoryUseCase {
   }
 
   
-  async getSubCategories(): Promise<ISubcategory [] | undefined> {
-    const subCategories = await this.adminrepository.subCategories();
+  async getSubCategories(page:number,limit:number): Promise<{subCategory:ISubcategory [],totalPages:number} | undefined> {
+    const {subCategory,totalPages} = await this.adminrepository.subCategories(page,limit);
 
-    if (subCategories.length === 0) {
+    if (subCategory.length === 0) {
       return undefined;
     }
-  
-    
-    
-    // const formattedSubCategories = subCategories.map(subCategory => ({
-    //   _id:subCategory._id,
-    //   name: subCategory.name,
-    //   description: subCategory.description,
-    //   category: subCategory.category && typeof subCategory.category === 'object' 
-    //     ? subCategory.category.name 
-    //     : 'Unknown Category'
-    // }));
-    return subCategories;
+    return {subCategory,totalPages}    
   }
   
 
