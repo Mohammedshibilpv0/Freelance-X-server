@@ -11,7 +11,9 @@ export interface IFreelancerGig {
     images: string[];
     price: number | string;
     userId?:string
+    modules?:[GigModules]
     createAt?:Date
+    paymentAmount?:number
   }
 
 
@@ -21,4 +23,11 @@ export interface IFreelancerGig {
     price:number,
     userId?:string
     status?:string
+}
+
+export interface GigModules{
+  heading: string, 
+  date: Date, 
+  amount: number 
+  isPaid:boolean
 }

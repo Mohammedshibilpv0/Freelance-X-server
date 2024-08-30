@@ -1,6 +1,7 @@
 import { IFreelancerRepository } from "../../interface/IFreelancerRepository";
 import { IFreelancerGig } from "../../doamin/entities/IFreelancerGig";
 import { IUserRepository } from "../../interface/IUserRepository";
+import { IUserPost } from "../../doamin/entities/UserPost";
 
 export default class ClientUseCase {
   private freelancerrepository: IFreelancerRepository;
@@ -46,8 +47,8 @@ export default class ClientUseCase {
     return undefined;
   }
 
-  async findgig(id: string): Promise<IFreelancerGig | null> {
-    const gig = await this.freelancerrepository.findGig(id);
+  async findgig(id: string,isRequest:boolean): Promise<IFreelancerGig | IUserPost|null> {
+    const gig = await this.freelancerrepository.findGig(id,isRequest);
     if (gig == null) {
       return gig;
     }
@@ -75,5 +76,42 @@ export default class ClientUseCase {
   async changeProjectStatus (id:string,status:string):Promise<IFreelancerGig|null>{
     return await this.freelancerrepository.changeStatus(id,status)
    }
+
+
+   async myRequests (email:string,page:number,limit:number): Promise<{ posts: IUserPost[], totalPages: number }| null | undefined>{
+    if(email){
+      const checkUser = await this.userepository.findByEmail(email);
+      if (checkUser && checkUser._id) {
+        const {posts,totalPages} = await this.freelancerrepository.listMyRequests(
+          checkUser._id,page,limit
+        );
+        return {posts,totalPages};
+      }
+      return null;
+    }
+    return undefined;
+  }
+
+  async myApproved (email:string,page:number,limit:number): Promise<{ posts: IUserPost[], totalPages: number }| null | undefined>{
+    if(email){
+      const checkUser = await this.userepository.findByEmail(email);
+      if (checkUser && checkUser._id) {
+        const {posts,totalPages} = await this.freelancerrepository.listApproved(
+          checkUser._id,page,limit
+        );
+        return {posts,totalPages};
+      }
+      return null;
+    }
+    return undefined;
+  }
+
+
+  async setProjectModule (id:string,data:object):Promise<IUserPost|null>{
+    return  await this.freelancerrepository.setModuleClientPost(id,data)
+  }
+  async setProjectModuleFreelancer (id:string,data:object):Promise<IFreelancerGig|null>{
+    return await this.freelancerrepository.setModuleFreelancerPost(id,data)
+  }
 
 }

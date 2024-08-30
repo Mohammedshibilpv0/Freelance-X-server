@@ -3,32 +3,42 @@ import { verifyAccessToken } from '../../interface/security/jwt';
 import { CustomRequest } from './customReq';
 import UserRepository from '../repositories/UserRepository';
 
-const userepository=new UserRepository()
+const userRepository = new UserRepository();
 
-const authMiddleware = async (req: CustomRequest, res: Response, next: NextFunction) => {
-  const token = req.cookies.accessToken; 
-  
-  if (!token) {
-    return res.status(401).json({ error: 'No token provided' });
-  }
-
-  try {
-    const decoded = verifyAccessToken(token);
-    if (decoded) {
-      const _id=decoded.id
-      const user= await userepository.findById(_id)
-      if (user && user.isBlock) {
-        return res.status(403).json({ error: 'User is blocked' });
-      }
-       req.user = { id: decoded.id, email: decoded.email };
-
-      next();
-    } else {
-      res.status(401).json({ error: 'Invalid token' });
+const authMiddleware = (requireAdmin: boolean = false) => {
+  return async (req: CustomRequest, res: Response, next: NextFunction) => {
+    let  token = req.cookies.accessToken; 
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
     }
-  } catch (err) {
-    return res.status(401).json({ error: 'Invalid token' });
-  }
+
+    try {
+      const decoded = verifyAccessToken(token);
+      if (decoded) {
+        const _id = decoded.id;
+        const user = await userRepository.findById(_id);
+
+        if (user) {
+          if (user.isBlock) {
+            return res.status(403).json({ error: 'User is blocked' });
+          }
+
+          if (requireAdmin && !user.isAdmin) {
+            return res.status(403).json({ error: 'Access denied. Admins only.' });
+          }
+
+          req.user = { id: decoded.id, email: decoded.email, isAdmin: user.isAdmin };
+          next();
+        } else {
+          return res.status(401).json({ error: 'Invalid token' });
+        }
+      } else {
+        res.status(401).json({ error: 'Invalid token' });
+      }
+    } catch (err) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+  };
 };
 
 export default authMiddleware;

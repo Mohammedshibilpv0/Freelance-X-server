@@ -1,6 +1,9 @@
 import { IUser, UserShortDetails } from "../../doamin/entities/User";
 import { IUserRepository } from "../../interface/IUserRepository";
 import { ISubcategory } from "../../doamin/entities/SubCategory";
+import { ICategory } from "../../doamin/entities/Category";
+import { IFriendsLists } from "../../doamin/entities/IFriendsLists";
+import { IMessage } from "../../doamin/entities/Message";
 
 
 export default class userUseCase{
@@ -42,6 +45,28 @@ export default class userUseCase{
         }
         return findUser;
     }
+
+
     
+   async categories ():Promise<ICategory[]|null>{
+    const categories=await this.userepository.categories()
+    if(categories==null){
+        return null
+    }
+    if(categories.length<0){
+        return null
+    }
+    return categories
+   }
+    
+   async findLists (id:string):Promise<IFriendsLists|null>{
+    const lists =await this.userepository.findUsersConnections(id)
+    return lists
+   }
+
+   async getMessages (id:string):Promise<IMessage[]|null>{
+    const messages= await this.userepository.getMessages(id)
+    return messages
+   }
     
 }

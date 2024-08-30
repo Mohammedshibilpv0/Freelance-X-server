@@ -10,7 +10,6 @@ import findallusers from "../../use-cases/admin/handleIUser";
 import AdminRepository from "../../infrastructure/repositories/AdminRepository";
 import CategoryUseCase from "../../use-cases/admin/CategoryUseCae";
 import { error } from "console";
-import SubCategory from "../../infrastructure/database/models/Subcategory";
 
 const userRepository = new UserRepository();
 const checkuser = new CheckuserExists(userRepository);
@@ -44,13 +43,13 @@ export const adminLogin = async (req: Request, res: Response) => {
     const accessToken = generateAccessToken(checkDetails);
     const refreshToken = generateRefreshToken(checkDetails);
     
-    res.cookie('adminaccessToken', accessToken, {
+    res.cookie('accessToken', accessToken, {
       ...cookieOptions,
       maxAge: 15 * 60 * 1000,
     });
 
 
-    res.cookie('adminrefreshToken', refreshToken, {
+    res.cookie('refreshToken', refreshToken, {
       ...cookieOptions,
       maxAge: 7 * 24 * 60 * 60 * 1000, 
     });
@@ -120,7 +119,7 @@ export const getCategory = async (req: Request, res: Response) => {
     if (categories.category.length < 0) {
       return res.status(400).json({ error: "Category not found" });
     }
-    return res.json({ categories:categories.category,totalPages:categories.totalPages });
+    return res.status(200).json({ categories:categories.category,totalPages:categories.totalPages });
   } catch (err) {
     return res.status(500).json({ error: "Internal server error" });
   }

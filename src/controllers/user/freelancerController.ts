@@ -80,7 +80,8 @@ export const freelanceWorks = async (req: Request, res: Response) => {
 export const findSinglegig = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const gig = await freelancerusecae.findgig(id);
+    const isRequest=req.query.request=='true'?true:false
+    const gig = await freelancerusecae.findgig(id,isRequest);
     if (gig == null) {
       return res.status(400).json({ error: "Cannot found Gig" });
     }
@@ -133,6 +134,89 @@ export const changeStatus= async (req:Request,res:Response)=>{
     }
     return res.status(200).json({data})
 
+  }catch(err){
+    return res.status(500).json({ error: "internal server error" })
+  }
+}
+
+
+
+export const findMyRequests = async(req:Request,res:Response)=>{
+  try{
+    const {email}=req.params
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 4;
+    const requests = await freelancerusecae.myRequests(email,page,limit);
+    if (requests && requests.posts.length > 0) {
+      return res.status(200).json({ success: true, data: requests ,totalPages:requests.totalPages});
+    } else if (requests === null) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found or no requests available.",
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email or no data provided.",
+      });
+    }
+  }catch(err){
+    return res.status(500).json({ error: "internal server error" })
+
+  }
+}
+
+
+export const myApprovedProjects = async(req:Request,res:Response)=>{
+  try{
+    const {email}=req.params
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 4;
+    const requests = await freelancerusecae.myApproved(email,page,limit);
+    if (requests && requests.posts.length > 0) {
+      return res.status(200).json({ success: true, data: requests ,totalPages:requests.totalPages});
+    } else if (requests === null) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found or no requests available.",
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email or no data provided.",
+      });
+    }
+  }catch(err){
+    return res.status(500).json({ error: "internal server error" })
+
+  }
+}
+
+export const setModuleClient = async (req:Request,res:Response)=>{
+  try{
+    const {id} = req.params
+    const {data}=req.body
+    const setModule=await freelancerusecae.setProjectModule(id,data)
+    if(setModule==null){
+      return res.status(400).json({error:'Cannot Found the Project'})
+     }
+     return res.status(200).json({data:setModule.modules})
+
+  }catch(err){
+    console.log(err)
+    return res.status(500).json({ error: "internal server error" })
+  }
+}
+
+export const setModuleFreelancer = async (req:Request,res:Response)=>{
+  try{
+    const {id} = req.params
+    const {data}=req.body
+    const setModule=await freelancerusecae.setProjectModuleFreelancer(id,data)
+    if(setModule==null){
+     return res.status(400).json({error:'Cannot Found the Project'})
+    }
+    return res.status(200).json({data:setModule.modules})
   }catch(err){
     console.log(err)
     return res.status(500).json({ error: "internal server error" })

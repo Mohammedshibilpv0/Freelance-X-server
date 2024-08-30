@@ -141,6 +141,7 @@ export const loginUser= async(req:Request,res:Response)=>{
         const accessToken= generateAccessToken(user)
         const refreshToken= generateRefreshToken(user)
         let userObject={
+          _id:user._id,
           email:user?.email,
           phone:user?.phone,
           firstName:user?.firstName,

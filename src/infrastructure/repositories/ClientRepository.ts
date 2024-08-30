@@ -1,5 +1,9 @@
+import { userPosts } from "../../controllers/user/ClientContoller";
+import { IFreelancerGig } from "../../doamin/entities/IFreelancerGig";
 import { IUserPost, requestInterface } from "../../doamin/entities/UserPost";
 import { IClientRepository } from "../../interface/IClientRepository";
+import FreelancerGig from "../database/models/FreelancerGigModel";
+import PaymentTransaction from "../database/models/TransactionModel";
 import UserPost from "../database/models/UserPostModal";
 import mongoose from "mongoose";
 
@@ -13,15 +17,23 @@ export default class ClientRepository implements IClientRepository {
     return UserPost.create(data);
   }
 
-  async findPost(id: string): Promise<IUserPost | null> {
+  async findPost(id: string,isRequest:boolean): Promise<IUserPost |IFreelancerGig |null> {
     if (!isValidObjectId(id)) {
       throw new Error(`Invalid post ID: ${id}`);
     }
+   if(isRequest){
+    return await FreelancerGig.findById(id).populate('category').populate('subcategory') .populate({
+      path: 'requests.userId',
+      select:'email firstName secondName',
+      model: 'User' 
+    });
+   }else{
     return await UserPost.findById(id).populate('category').populate('subcategory') .populate({
       path: 'requests.userId',
       select:'email firstName secondName',
       model: 'User' 
     });
+   }
       
   }
 
@@ -64,7 +76,6 @@ export default class ClientRepository implements IClientRepository {
       { new: true }
     );
 
-    console.log(updatedUserPost)
     return updatedUserPost;
   }
 
@@ -82,6 +93,124 @@ export default class ClientRepository implements IClientRepository {
     }
 
     return userPost;
+}
+
+async  listMyRequests(id: string, page: number, limit: number): Promise<{ posts: IFreelancerGig[]; totalPages: number; }> {
+ 
+  if (page < 1 || limit < 1) {
+      throw new Error('Page and limit must be greater than 0.');
+  }
+
+
+  const skip = (page - 1) * limit;
+
+
+  const totalPostsCount = await FreelancerGig.countDocuments({
+      'requests.userId': new  mongoose.Types.ObjectId(id),
+      'status':'Pending'
+  });
+
+
+  const totalPages = Math.ceil(totalPostsCount / limit);
+
+
+  const posts = await FreelancerGig.find({
+      'requests.userId':new  mongoose.Types.ObjectId(id),
+      'status':'Pending'
+  })
+  .skip(skip)
+  .limit(limit)
+  .populate('category')
+  .populate('subcategory')
+  .exec();
+   console.log(posts)
+  return {
+      posts,
+      totalPages,
+  };
+}
+async  listApproved(id: string, page: number, limit: number): Promise<{ posts: IFreelancerGig[]; totalPages: number; }> {
+ 
+  if (page < 1 || limit < 1) {
+      throw new Error('Page and limit must be greater than 0.');
+  }
+
+
+  const skip = (page - 1) * limit;
+
+
+  const totalPostsCount = await FreelancerGig.countDocuments({
+      'requests.userId': new  mongoose.Types.ObjectId(id),
+      'status':'Approved'
+  });
+
+
+  const totalPages = Math.ceil(totalPostsCount / limit);
+
+
+  const posts = await FreelancerGig.find({
+      'requests.userId':new  mongoose.Types.ObjectId(id),
+      'status':'Approved'
+  })
+  .skip(skip)
+  .limit(limit)
+  .populate('category')
+  .populate('subcategory')
+  .exec();
+  return {
+      posts,
+      totalPages,
+  };
+}
+
+async  successPayment(token: string, projectId: string,amount:string,isPost:string): Promise<any> {
+  try {
+    let project
+    if(isPost=='false'){
+      project = await FreelancerGig.findById(projectId).exec();
+    }else{
+      project = await UserPost.findById(projectId).exec();
+    }
+    if (!project) {
+      throw new Error('Project not found');
+    }
+
+    const senderId = project.userId;
+
+    if (project.requests && project.requests.length > 0) {
+      const approvedReceiver = project.requests.find((req) => req.status === "Approved");
+
+      if (!approvedReceiver) {
+        throw new Error('No approved receiver found');
+      }
+
+      const transaction = new PaymentTransaction({
+        transactionId: token,
+        receiverId: approvedReceiver.userId,
+        senderId: senderId,
+        amount: amount, 
+        currency: 'USD',
+        status: 'completed',
+      });
+
+      await transaction.save();
+
+      if (project.modules) {
+        const moduleToUpdate = project.modules.find((mod) => !mod.isPaid);
+        if (moduleToUpdate) {
+          moduleToUpdate.isPaid = true;
+          await project.save();
+        }
+      }
+
+      return { message: 'Payment successful', transaction };
+    } else {
+      throw new Error('No requests found in the project');
+    }
+  } catch (error) {
+    console.error('Error processing payment:', error);
+    throw new Error('Error processing payment');
+  }
 }
 
 }

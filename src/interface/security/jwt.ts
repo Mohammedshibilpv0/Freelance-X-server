@@ -5,11 +5,11 @@ const accessTokenSecret='access_secret'
 const refreshTokenSecret ='refresh_secret'
 
 export const generateAccessToken=(user:any)=>{
-    return jwt.sign({id:user._id,email:user.email},accessTokenSecret,{ expiresIn: '15m' })
+    return jwt.sign({id:user._id,email:user.email,role:user.isAdmin},accessTokenSecret,{ expiresIn: '15m' })
 }
 
 export const generateRefreshToken=(user:any)=>{
-    return jwt.sign({id:user._id,email:user.email},refreshTokenSecret,{ expiresIn: '7d' })
+    return jwt.sign({id:user._id,email:user.email,role:user.isAdmin},refreshTokenSecret,{ expiresIn: '7d' })
 }
 
 export const verifyAccessToken = (token: string): JwtPayload | undefined => {

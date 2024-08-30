@@ -14,6 +14,8 @@ export const editUser= async(req:Request,res:Response)=>{
          
        let editProfile= await useruseCase.editUserProfile(Data)  
         const userData={
+            _id:editProfile?._id,
+            role:editProfile?.role,
             email:editProfile?.email,
             phone:editProfile?.phone,
             firstName:editProfile?.firstName,
@@ -135,3 +137,47 @@ export const findUser =async (req:Request,res:Response)=>{
     return res.status(500).json({ error: "internal server error" });
   }
 }
+
+export const categories = async (req:Request,res:Response)=>{
+  try{
+    const categories= await useruseCase.categories()
+    if(categories==null){
+      return res.status(400).json({error:'Categories Not found'})
+    }
+    return res.status(200).json({ categories: categories})
+
+  }catch(err){
+    return res.status(500).json({ error: "internal server error" });
+  }
+}
+
+export const friendList = async(req:Request,res:Response)=>{
+  try{
+    const {id}=req.params
+    const list = await useruseCase.findLists(id)
+    if(list==null){
+    return res.status(200).json({message:'Your friend list is empty'})
+    }
+    return res.status(200).json({list})
+
+  }catch(err){
+    return res.status(500).json({ error: "internal server error" }); 
+  }
+}
+
+export const userMessages = async (req:Request,res:Response)=>{
+  try{
+    const {id}=req.params
+    const messages= await useruseCase.getMessages(id)
+    if(messages==null){
+      return res.status(400).json({error:'Something went wrong'})
+    }
+   return res.status(200).json({messages})
+  }catch(err:any){
+    if (err.message.startsWith("Invalid  ID")) {      
+      return res.status(400).json({ message: err.message });
+    }
+    return res.status(500).json({ error: "internal server error" }); 
+  }
+}
+

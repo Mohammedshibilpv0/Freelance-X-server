@@ -4,7 +4,8 @@ import morgan from 'morgan';
 import { connectDB } from './config/database';
 import routes from './presentation/routes';
 import cookieParser from 'cookie-parser';
-
+import http from 'http';
+import setupSocketIO from './utils/soket';
 
 const app: Application = express();
 const PORT = process.env.PORT || 3000;
@@ -27,10 +28,11 @@ app.use(morgan('dev'));
 app.use('/', routes);
 
 
-
+const server = http.createServer(app);
+const io = setupSocketIO(server);
 
 connectDB().then(()=>{
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
 })
