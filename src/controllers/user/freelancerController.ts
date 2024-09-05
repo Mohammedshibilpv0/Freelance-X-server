@@ -57,14 +57,13 @@ export const freelanceWorks = async (req: Request, res: Response) => {
     const { email } = req.params;
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 4;
-    const works = await freelancerusecae.listFreelancerWork(email,page,limit);
-
-    if (works && works.posts.length > 0) {
-      return res.status(200).json({ data: works.posts,totalPages:works.totalPages });
-    } else if (works?.posts === null) {
+    const posts = await freelancerusecae.listFreelancerWork(email,page,limit);
+    if (posts && posts.posts.length > 0) {
+      return res.status(200).json({ data: posts,totalPages:posts.totalPages });
+    } else if (posts?.posts === null) {
       return res.status(404).json({
         success: false,
-        message: "User not found or no works available.",
+        message: "User not found or no posts available.",
       });
     } else {
       return res.status(400).json({

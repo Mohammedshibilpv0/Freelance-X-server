@@ -16,8 +16,9 @@ export interface IUserRepository {
     subCategories(categoryId:string):Promise<ISubcategory[]|null>
     findById(id:string):Promise<IUser|null>
     categories():Promise<ICategory[]|null>
-    saveMessage(senderId:string,receiverId:string,message:string):Promise<object|null>
+    saveMessage(senderId:string,receiverId:string,message:string,initial:boolean,messageId:string):Promise<any|null>
     findUsersConnections(id:string):Promise<IFriendsLists|null>
     getMessages(conversationId:string):Promise<IMessage[]|null>
     setNotification(senderId:string,receiverId:string,text:string):Promise<INotification|null>
+    updateMessage(id: string, status: 'sent' | 'delivered' | 'read'): Promise<IMessage | null> 
 }

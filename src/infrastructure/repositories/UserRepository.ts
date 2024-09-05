@@ -74,7 +74,7 @@ export default class UserRepository implements IUserRepository{
     }
 
 
-    async saveMessage(senderId: string, receiverId: string, message: string,initial=false): Promise<object|null> {
+    async saveMessage(senderId: string, receiverId: string, message: string,initial=false,messageId:string): Promise<any|null> {
         try{
             let conversation = await Conversation.findOne({
                 $or: [
@@ -91,6 +91,7 @@ export default class UserRepository implements IUserRepository{
                 sender: senderId,
                 text: message,
                 timestamp: new Date(),
+                messageId:messageId
             });
             if(initial==true){
                 
@@ -169,5 +170,23 @@ async  setNotification(senderId: string, receiverId: string, text: string): Prom
         return null;
     }
 }
+
+
+async updateMessage(id: string, status: 'sent' | 'delivered' | 'read'): Promise<IMessage | null> {
+    try {
+        const updatedMessage = await Message.findByIdAndUpdate(
+            id,
+            { status },
+            { new: true } 
+        ) as IMessage | null;
+
+        return updatedMessage;
+    } catch (err) {
+        console.error('Error updating message:', err);
+        return null;
+    }
+}
+
+
 
 }

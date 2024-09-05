@@ -43,7 +43,6 @@ export const editUserProfileImage = async (req: Request, res: Response) => {
     try {
      
       const { Data } = req.body;
-      console.log(req.file);
       
       const parsedData = JSON.parse(Data);
       const email = parsedData.email
@@ -57,7 +56,7 @@ export const editUserProfileImage = async (req: Request, res: Response) => {
       const newFileName = `${timestamp}${originalName}`;
     
       
-  
+              
       const blob = bucket.file(newFileName);
       const blobStream = blob.createWriteStream({
         metadata: {

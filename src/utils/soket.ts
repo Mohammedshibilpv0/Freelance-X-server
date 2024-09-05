@@ -2,7 +2,7 @@ import { Server, Socket } from "socket.io";
 import { Server as HttpServer } from "http";
 import UserRepository from "../infrastructure/repositories/UserRepository";
 import { IMessage } from "../doamin/entities/Message";
-
+import Message from "../infrastructure/database/models/Message";
 interface SocketUser {
   id: string;
   socketId: string;
@@ -39,8 +39,8 @@ const initializeSocket = (server: HttpServer): Server => {
     console.log("A user connected:", socket.id);
 
     socket.on("initialMessage",async(messageData)=>{
-      const {currentUserId,message,id}=messageData
-      let a:any= await userrepository.saveMessage(currentUserId, id, message);
+      const {currentUserId,message,id,messageId}=messageData
+      let a:any= await userrepository.saveMessage(currentUserId, id,message,true,messageId);
       io.emit("getinitialMessage", a.conversationId);
     });
 
@@ -52,23 +52,38 @@ const initializeSocket = (server: HttpServer): Server => {
     socket.on("message",async (message: IMessage) => {
       const user = getUser(message.receiverId);
 
-      const { senderId, text, receiverId} = message;
+      const { senderId, text, receiverId,messageId} = message;
       const messages = {
+        messageId,
         sender: senderId,
         text,
         timestamp: new Date(),
       };
+      await userrepository.saveMessage(senderId, receiverId, text,false,messageId);
       if (user) {
+        console.log(message)
         io.to(user.socketId).emit("messageContent", messages);
       }
-       await userrepository.saveMessage(senderId, receiverId, text);
 
     });
 
+
+socket.on("messageRead", async (messageId: string) => {
+  const message = await Message.findOne({messageId});
+  if (message) {
+    message.status = 'read';
+    await message.save();
+    const sender = getUser(message.sender.toString());
+    if (sender) {
+      io.to(sender.socketId).emit("messageReadConfirmation", messageId);
+    }
+  }
+});
+
+   
     socket.on("notification",async(messageData)=>{
       const {senderId,receiverId,text}=messageData
       const user = getUser(receiverId);
-      // let a:any= await userrepository.setNotification(senderId,receiverId,text);
       const notification={
         sender:senderId,
         receiver:receiverId,
