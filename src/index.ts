@@ -6,12 +6,13 @@ import routes from './presentation/routes';
 import cookieParser from 'cookie-parser';
 import http from 'http';
 import setupSocketIO from './utils/soket';
+import { CORSURL, PORT } from './config/env';
 
 const app: Application = express();
-const PORT = process.env.PORT || 3000;
+const Port = PORT|| 3000;
 
 const corsOptions = {
-  origin: 'http://localhost:5173',
+  origin: CORSURL,
   //  origin:'https://qnn863k8-5173.inc1.devtunnels.ms',
    methods: ['GET', 'POST', 'PUT', 'DELETE','PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -32,7 +33,7 @@ const server = http.createServer(app);
 const io = setupSocketIO(server);
 
 connectDB().then(()=>{
-  server.listen(PORT, () => {
+  server.listen(Port, () => {
     console.log(`Server is running on port ${PORT}`);
   });
 })

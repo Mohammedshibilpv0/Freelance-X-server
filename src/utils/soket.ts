@@ -3,6 +3,7 @@ import { Server as HttpServer } from "http";
 import UserRepository from "../infrastructure/repositories/UserRepository";
 import { IMessage } from "../doamin/entities/Message";
 import Message from "../infrastructure/database/models/Message";
+import { CORSURL } from "../config/env";
 interface SocketUser {
   id: string;
   socketId: string;
@@ -12,7 +13,7 @@ const userrepository = new UserRepository();
 const initializeSocket = (server: HttpServer): Server => {
   const io = new Server(server, {
     cors: {
-      origin: "http://localhost:5173",
+      origin: CORSURL,
       // origin:"https://qnn863k8-5173.inc1.devtunnels.ms",
       methods: ["GET", "POST"],
     },

@@ -1,8 +1,9 @@
 import { createClient } from 'redis';
+import { REDISURL } from '../config/env';
 
 
 const redisClient = createClient({
-  url: 'redis://localhost:6379',
+  url: REDISURL,
 });
 
 redisClient.on('error', (err) => {

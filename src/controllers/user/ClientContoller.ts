@@ -3,7 +3,8 @@ import ClientRepository from "../../infrastructure/repositories/ClientRepository
 import ClientUseCase from "../../use-cases/user/ClientUseCase";
 import { bucket } from "../../utils/firebase";
 import UserRepository from "../../infrastructure/repositories/UserRepository";
-const stripe = require('stripe')('sk_test_51Pt0RTP3OhBjO920OSWjqd4Z3y6WEz1audsYwaI922G1Za4jSwVGoJD3zBXJfeyhKuV59u2iaaHYjQ5IkfjTXUBy00XOid71sN')
+import { STRIPE_SECRET } from "../../config/env";
+const stripe = require('stripe')(STRIPE_SECRET)
 
 const clientrepository = new ClientRepository();
 const userRepository = new UserRepository();
@@ -78,8 +79,6 @@ export const uploadImage = async (req: Request, res: Response) => {
     blobStream.on("finish", async () => {
       const encodedFileName = encodeURIComponent(newFileName);
       const profile = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedFileName}?alt=media`;
-      console.log(profile);
-
       return res
         .status(200)
         .send({
