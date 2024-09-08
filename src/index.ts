@@ -5,7 +5,7 @@ import { connectDB } from './config/database';
 import routes from './presentation/routes';
 import cookieParser from 'cookie-parser';
 import http from 'http';
-import setupSocketIO from './utils/soket';
+import setupSocketIO from './utils/socket';
 import { CORSURL, PORT } from './config/env';
 
 const app: Application = express();

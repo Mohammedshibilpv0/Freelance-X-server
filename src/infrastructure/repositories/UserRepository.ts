@@ -13,6 +13,8 @@ import Message from '../database/models/Message';
 import { IFriend, IFriendsLists } from '../../doamin/entities/IFriendsLists';
 import { IMessage } from '../../doamin/entities/Message';
 import Notification, { INotification } from '../database/models/NotificationModel';
+import { bucket } from '../../utils/firebase'; 
+const { v4: uuidv4 } = require('uuid');
 
 const isValidObjectId = (id: string): boolean => {
     return mongoose.Types.ObjectId.isValid(id);
@@ -86,6 +88,17 @@ export default class UserRepository implements IUserRepository{
             if (!conversation) {
                 conversation = await Conversation.create({ user1: senderId, user2: receiverId });
             }
+            if(conversation){
+                await Conversation.findOneAndUpdate({
+                    $or: [
+                        { user1: senderId, user2: receiverId },
+                        { user1: receiverId, user2: senderId },
+                    ]},
+                    {updatedAt:Date.now(),
+                    lastMessage:message,
+                    }
+                )
+            }
             const newMessage = await Message.create({
                 conversationId: conversation._id,
                 sender: senderId,
@@ -112,7 +125,7 @@ async findUsersConnections(id: string): Promise<IFriendsLists|null> {
 
     const conversations = await Conversation.find({
       $or: [{ user1: userId }, { user2: userId }],
-    });
+    }).sort({ updatedAt: -1 });
 
     if (!conversations.length) {
       return null; 
@@ -136,7 +149,9 @@ async findUsersConnections(id: string): Promise<IFriendsLists|null> {
         id: friendId.toString(),
         firstName: friend?.firstName || '',
         lastName: friend?.secondName || '',  
-        conversationId:conversation.id.toString()
+        conversationId:conversation.id.toString(),
+        updatedAt: conversation.updatedAt, 
+        lastMessage: conversation.lastMessage
       };
     });
     return {friends};
@@ -172,10 +187,10 @@ async  setNotification(senderId: string, receiverId: string, text: string): Prom
 }
 
 
-async updateMessage(id: string, status: 'sent' | 'delivered' | 'read'): Promise<IMessage | null> {
+async updateMessage(messageId: string, status: 'sent' | 'delivered' | 'read'): Promise<IMessage | null> {
     try {
-        const updatedMessage = await Message.findByIdAndUpdate(
-            id,
+        const updatedMessage = await Message.findOneAndUpdate(
+            {messageId},
             { status },
             { new: true } 
         ) as IMessage | null;
@@ -187,6 +202,113 @@ async updateMessage(id: string, status: 'sent' | 'delivered' | 'read'): Promise<
     }
 }
 
+async uploadAudio(audio: Buffer): Promise<string | null> {
+    try {
+      const fileName = `${uuidv4()}.wav`;
+      const blob = bucket.file(`audio-messages/${fileName}`);
+  
+      return new Promise((resolve, reject) => {
+        const blobStream = blob.createWriteStream({
+          metadata: {
+            contentType: 'audio/wav',
+          },
+        });
+  
+        blobStream.on('error', (err) => {
+          console.error('Error uploading audio file:', err);
+          reject(err);  
+        });
+  
+        blobStream.on('finish', () => {
+          const encodedFileName = encodeURIComponent(fileName);
+          const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/audio-messages%2F${encodedFileName}?alt=media`;
+  
+          resolve(publicUrl);
+        });
+  
+        blobStream.end(audio); 
+      });
+  
+    } catch (err) {
+      console.error('Error in uploadAudio function:', err);
+      return null;
+    }
+  }
+  
 
+
+  async saveAudio(senderId: string, receiverId: string, audio: string, messageId: string): Promise<any> {
+    try{
+        let conversation = await Conversation.findOne({
+            $or: [
+                { user1: senderId, user2: receiverId },
+                { user1: receiverId, user2: senderId },
+            ],
+        });
+
+        if (!conversation) {
+            conversation = await Conversation.create({ user1: senderId, user2: receiverId });
+        }
+        if(conversation){
+            await Conversation.findOneAndUpdate({
+                $or: [
+                    { user1: senderId, user2: receiverId },
+                    { user1: receiverId, user2: senderId },
+                ]},
+                {updatedAt:Date.now(),
+                lastMessage:'Sent Voice message',
+                }
+            )
+        }
+        const newMessage = await Message.create({
+            conversationId: conversation._id,
+            sender: senderId,
+            audio: audio,
+            timestamp: new Date(),
+            messageId:messageId
+        });
+
+        return newMessage;
+    }catch(err){
+        console.log(err)
+    }
+  }
+
+  async saveImage(file: string, senderId: string, receiverId: string, messageId: string): Promise<any> {
+    try{
+        let conversation = await Conversation.findOne({
+            $or: [
+                { user1: senderId, user2: receiverId },
+                { user1: receiverId, user2: senderId },
+            ],
+        });
+
+        if (!conversation) {
+            conversation = await Conversation.create({ user1: senderId, user2: receiverId });
+        }
+        if(conversation){
+            await Conversation.findOneAndUpdate({
+                $or: [
+                    { user1: senderId, user2: receiverId },
+                    { user1: receiverId, user2: senderId },
+                ]},
+                {updatedAt:Date.now(),
+                lastMessage:'image',
+                }
+            )
+        }
+        const newMessage = await Message.create({
+            conversationId: conversation._id,
+            sender: senderId,
+            file: file,
+            timestamp: new Date(),
+            messageId:messageId
+        });
+
+        return newMessage;
+    }catch(err){
+        console.log(err)
+    }
+  }
 
 }

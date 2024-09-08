@@ -4,6 +4,7 @@ import UserRepository from "../infrastructure/repositories/UserRepository";
 import { IMessage } from "../doamin/entities/Message";
 import Message from "../infrastructure/database/models/Message";
 import { CORSURL } from "../config/env";
+import { timeStamp } from "console";
 interface SocketUser {
   id: string;
   socketId: string;
@@ -62,26 +63,65 @@ const initializeSocket = (server: HttpServer): Server => {
       };
       await userrepository.saveMessage(senderId, receiverId, text,false,messageId);
       if (user) {
-        console.log(message)
         io.to(user.socketId).emit("messageContent", messages);
       }
 
     });
 
+    socket.on('sendAudioMessage',async(data)=>{
+      const {senderId, audio, receiverId,messageId}=data
+      const storeVoice= await userrepository.uploadAudio(audio)
+      if (!storeVoice) {
+        throw new Error('Audio upload failed or storeVoice is undefined');
+      }
+       await userrepository.saveAudio(senderId,receiverId,storeVoice,messageId)
+      const message = {
+        messageId,
+        sender:senderId,
+        audio:storeVoice,
+        timeStamp:new Date()
+      }
+      const user = getUser(receiverId);
+      if(user){
+        io.to(user.socketId).emit("messageContent", message);
+      }
+    })
 
-socket.on("messageRead", async (messageId: string) => {
-  const message = await Message.findOne({messageId});
-  if (message) {
-    message.status = 'read';
-    await message.save();
-    const sender = getUser(message.sender.toString());
-    if (sender) {
-      io.to(sender.socketId).emit("messageReadConfirmation", messageId);
+    socket.on('sendFileMessage',async(fileData)=>{
+      const {file,senderId,receiverId,messageId}=fileData
+      await userrepository.saveImage(file,senderId,receiverId,messageId)
+      const user = getUser(receiverId)
+      const message = {
+        messageId,
+        sender:senderId,
+        file:file,
+        timeStamp:new Date()
+      }
+      if(user){
+        io.to(user.socketId).emit("messageContent", message);
+      }
+    })
+
+      socket.on("messageRead", async (messageId: string) => {
+        const message = await Message.findOne({messageId});
+        if (message) {
+          message.status = 'read';
+          await message.save();
+          const sender = getUser(message.sender.toString());
+          if (sender) {
+            io.to(sender.socketId).emit("messageReadConfirmation", messageId);
+          }
+        }
+      });
+
+    socket.on('typing',async(data)=>{
+    const {conversationId,type,receiverId} = data
+    const sender=getUser(receiverId)
+    if(sender){
+      io.to(sender.socketId).emit('changestatus',{conversationId,type,receiverId})
     }
-  }
-});
+    })
 
-   
     socket.on("notification",async(messageData)=>{
       const {senderId,receiverId,text}=messageData
       const user = getUser(receiverId);

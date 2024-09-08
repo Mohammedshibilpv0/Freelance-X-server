@@ -21,4 +21,7 @@ export interface IUserRepository {
     getMessages(conversationId:string):Promise<IMessage[]|null>
     setNotification(senderId:string,receiverId:string,text:string):Promise<INotification|null>
     updateMessage(id: string, status: 'sent' | 'delivered' | 'read'): Promise<IMessage | null> 
+    uploadAudio(audio:Buffer):Promise<any>
+    saveAudio(senderId:string,receiverId:string,audio:string,messageId:string):Promise<any>
+    saveImage(file:string,senderId:string,receiverId:string,messageId:string):Promise<any>
 }

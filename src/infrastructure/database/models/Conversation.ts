@@ -3,16 +3,16 @@ import mongoose, { Document, Schema } from 'mongoose';
 interface IConversation extends Document {
   user1: mongoose.Types.ObjectId; 
   user2: mongoose.Types.ObjectId; 
-  firstName: string;
-  lastName: string;
   createdAt: Date; 
   updatedAt: Date;  
+  lastMessage: string;
 }
 
 const ConversationSchema: Schema = new Schema(
   {
     user1: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     user2: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    lastMessage: { type: String, default: '' },
   },
   { 
     timestamps: true 
