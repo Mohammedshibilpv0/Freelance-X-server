@@ -9,7 +9,7 @@ import {
 import findallusers from "../../use-cases/admin/handleIUser";
 import AdminRepository from "../../infrastructure/repositories/AdminRepository";
 import CategoryUseCase from "../../use-cases/admin/CategoryUseCae";
-import { error } from "console";
+import { HttpStatusCode } from "../../utils/httpStatusCode";
 
 const userRepository = new UserRepository();
 const checkuser = new CheckuserExists(userRepository);
@@ -30,14 +30,14 @@ export const adminLogin = async (req: Request, res: Response) => {
     const { email, password } = req.body;
     let checkDetails = await checkuser.execute(email);
     if (!checkDetails) {
-      return res.status(400).json({ error: "Admin not Found" });
+      return res.status(HttpStatusCode.BAD_REQUEST).json({ error: "Admin not Found" });
     }
     if (checkDetails && checkDetails.isAdmin == false) {
-      return res.status(400).json({ error: "Admin not Found" });
+      return res.status(HttpStatusCode.BAD_REQUEST).json({ error: "Admin not Found" });
     }
     let checkPassword = await bcrypt.compare(password, checkDetails.password);
     if (!checkPassword) {
-      return res.status(400).json({ error: "Password is not matched" });
+      return res.status(HttpStatusCode.BAD_REQUEST).json({ error: "Password is not matched" });
     }
 
     const accessToken = generateAccessToken(checkDetails);
@@ -54,10 +54,10 @@ export const adminLogin = async (req: Request, res: Response) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, 
     });
     return res
-      .status(200)
+      .status(HttpStatusCode.OK)
       .json({ message: "Admin Loged", accessToken, refreshToken });
   } catch (err) {
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
   }
 };
 
@@ -67,7 +67,7 @@ export const listallusers = async (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 7;
     const users = await handleUser.findusers(page,limit);
     if (users && users.users.length > 0) {
-      return res.status(200).json({ success: true, data: users ,totalPages:users.totalPages});
+      return res.status(HttpStatusCode.OK).json({ success: true, data: users ,totalPages:users.totalPages});
     } else{
       return res.status(404).json({
         success: false,
@@ -75,7 +75,7 @@ export const listallusers = async (req: Request, res: Response) => {
       });
     }
   } catch (err) {
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
   }
 };
 
@@ -84,11 +84,11 @@ export const updateUserStatus = async (req: Request, res: Response) => {
     const { action, email } = req.body;
     const updateUser = await handleUser.updateUser(action, email);
     if (updateUser.error) {
-      return res.status(400).json({ error: updateUser.error });
+      return res.status(HttpStatusCode.BAD_REQUEST).json({ error: updateUser.error });
     }
-    return res.status(200).json({ message: updateUser.message });
+    return res.status(HttpStatusCode.OK).json({ message: updateUser.message });
   } catch (err) {
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
   }
 };
 
@@ -97,15 +97,15 @@ export const addCategory = async (req: Request, res: Response) => {
     const { name, description } = req.body;
 
     if (name == "" || description == "") {
-      return res.status(400).json({ error: "Name and Description are required" });
+      return res.status(HttpStatusCode.BAD_REQUEST).json({ error: "Name and Description are required" });
     }
     const addCategory = await handleCategory.addCategory(name, description);
     if (addCategory?.error) {   
-      return res.status(400).json({ error: addCategory.error });
+      return res.status(HttpStatusCode.BAD_REQUEST).json({ error: addCategory.error });
     }
-    return res.status(200).json({ message: addCategory.message, category : addCategory.category });
+    return res.status(HttpStatusCode.OK).json({ message: addCategory.message, category : addCategory.category });
   } catch (err) {
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
   }
 };
 
@@ -117,11 +117,11 @@ export const getCategory = async (req: Request, res: Response) => {
 
     const categories = await handleCategory.listCategories(page,limit);
     if (categories.category.length < 0) {
-      return res.status(400).json({ error: "Category not found" });
+      return res.status(HttpStatusCode.BAD_REQUEST).json({ error: "Category not found" });
     }
-    return res.status(200).json({ categories:categories.category,totalPages:categories.totalPages });
+    return res.status(HttpStatusCode.OK).json({ categories:categories.category,totalPages:categories.totalPages });
   } catch (err) {
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
   }
 };
 
@@ -130,11 +130,11 @@ export const findCategory = async (req: Request, res: Response) => {
     const { id } = req.params;
     const findCategory = await handleCategory.findCategory(id);
     if (findCategory == null) {
-      return res.status(400).json({ error: "Category not found" });
+      return res.status(HttpStatusCode.BAD_REQUEST).json({ error: "Category not found" });
     }
-    return res.status(200).json({ category: findCategory });
+    return res.status(HttpStatusCode.OK).json({ category: findCategory });
   } catch (err) {
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
   }
 };
 
@@ -148,17 +148,17 @@ export const editCategory = async (req: Request, res: Response) => {
     );
 
     if (typeof editCategoryResult === "string") {
-      return res.status(400).json({ error: editCategoryResult });
+      return res.status(HttpStatusCode.BAD_REQUEST).json({ error: editCategoryResult });
     } else if (editCategoryResult.message === "edited successfully") {
-      return res.status(200).json(editCategoryResult);
+      return res.status(HttpStatusCode.OK).json(editCategoryResult);
     } else {
       return res.status(404).json({ error: editCategoryResult.message });
     }
   } catch (err: any) {
     if (err.message.startsWith("Invalid category ID")) {
-      return res.status(400).json({ message: err.message });
+      return res.status(HttpStatusCode.BAD_REQUEST).json({ message: err.message });
     }
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
   }
 };
 
@@ -168,15 +168,15 @@ export const deleteCategory = async (req: Request, res: Response) => {
     const deleteCategory = await handleCategory.deleteCategory(id);
     if (deleteCategory == null) {
       return res
-        .status(400)
+        .status(HttpStatusCode.BAD_REQUEST)
         .json({ error: "Somthing wrong in delete category" });
     }
-    return res.status(200).json({ message: "Category deleted successfuly" });
+    return res.status(HttpStatusCode.OK).json({ message: "Category deleted successfuly" });
   } catch (err: any) {
     if (err.message.startsWith("Invalid category ID")) {
-      return res.status(400).json({ message: err.message });
+      return res.status(HttpStatusCode.BAD_REQUEST).json({ message: err.message });
     }
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
   }
 };
 
@@ -185,11 +185,11 @@ export const addSubcategory =async(req:Request,res:Response)=>{
     const {name,description,category}=req.body
     const createSubcategory=await handleCategory.addSubCategory(name,description,category)
     if(createSubcategory==undefined){
-      return res.status(400).json({error:'Something error in adding subcategory'})
+      return res.status(HttpStatusCode.BAD_REQUEST).json({error:'Something error in adding subcategory'})
     }
-    return res.status(200).json({message:'Subcategory added',subCategory:createSubcategory})
+    return res.status(HttpStatusCode.OK).json({message:'Subcategory added',subCategory:createSubcategory})
   }catch(err){
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
   }
 }
 
@@ -200,12 +200,12 @@ export const getSubcategory= async(req:Request,res:Response)=>{
     const limit = parseInt(req.query.limit as string) || 7;
     const getSubcategories=await handleCategory.getSubCategories(page,limit)
     if(getSubcategories==undefined){
-      return res.status(400).json({error:'There is no subcategories'})
+      return res.status(HttpStatusCode.BAD_REQUEST).json({error:'There is no subcategories'})
     }
-    return res.status(200).json({SubCategories:getSubcategories.subCategory,totalPages:getSubcategories.totalPages})
+    return res.status(HttpStatusCode.OK).json({SubCategories:getSubcategories.subCategory,totalPages:getSubcategories.totalPages})
   }catch(err){
     console.log(err);
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
   }
 }
 
@@ -217,14 +217,14 @@ export const findSubcategorybyId = async (req:Request,res:Response)=>{
     console.log(findSubCategory);
     
     if (findSubCategory == null) {
-      return res.status(400).json({ error: "Subcategory not found" });
+      return res.status(HttpStatusCode.BAD_REQUEST).json({ error: "Subcategory not found" });
     }
-    return res.status(200).json({ SubCategory: findSubCategory });
+    return res.status(HttpStatusCode.OK).json({ SubCategory: findSubCategory });
   }catch(err:any){
     if (err.message.startsWith("Invalid category ID")) {
-      return res.status(400).json({ message: err.message });
+      return res.status(HttpStatusCode.BAD_REQUEST).json({ message: err.message });
     }
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
   }
   
 }
@@ -232,25 +232,25 @@ export const findSubcategorybyId = async (req:Request,res:Response)=>{
 
 export const editSubCategory = async (req: Request, res: Response) => {
   try {
-    const   {subcategoryId,name,description,category} =req.body
+    const {subcategoryId,name,description,category} =req.body
     const editSubCategoryResult = await handleCategory.editSubCategory(
       subcategoryId,
       {name,description,category}
     );
 
     if (typeof editSubCategoryResult === "string") {
-      return res.status(400).json({ error: editSubCategoryResult });
+      return res.status(HttpStatusCode.BAD_REQUEST).json({ error: editSubCategoryResult });
     } else if (editSubCategoryResult.message === "edited successfully") {
-      return res.status(200).json(editSubCategoryResult);
+      return res.status(HttpStatusCode.OK).json(editSubCategoryResult);
     } else {
       return res.status(404).json({ error: editSubCategoryResult.message });
     }
   } catch (err: any) {
     if (err.message.startsWith("Invalid Subcategory ID")) {
-      return res.status(400).json({ message: err.message });
+      return res.status(HttpStatusCode.BAD_REQUEST).json({ message: err.message });
     }
     
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
   }
 };
 
@@ -261,15 +261,99 @@ export const deleteSubCategory = async(req:Request,res:Response)=>{
     const deleteSubCategory = await handleCategory.deleteSubCategory(id);
     if (deleteSubCategory == null) {
       return res
-        .status(400)
+        .status(HttpStatusCode.BAD_REQUEST)
         .json({ error: "Somthing wrong in delete subcategory" });
     }
-    return res.status(200).json({ message: "Subcategory deleted successfuly" });
+    return res.status(HttpStatusCode.OK).json({ message: "Subcategory deleted successfuly" });
 
   }catch(err:any){
     if (err.message.startsWith("Invalid Subcategory ID")) {
-      return res.status(400).json({ message: err.message });
+      return res.status(HttpStatusCode.BAD_REQUEST).json({ message: err.message });
     }
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
+  }
+}
+
+export const userPosts = async (req:Request,res:Response)=>{
+  try{
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 7;
+    const userPosts= await handleUser.userPosts(page,limit)
+    if(userPosts==undefined){
+      return res.status(HttpStatusCode.BAD_REQUEST).json({error:'There is no posts'})
+    }
+    return res.status(HttpStatusCode.OK).json({userPosts:userPosts.userPosts,totalPages:userPosts.totalPages})
+  }catch(err){
+    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
+  }
+}
+
+export const handleBlockUserPost = async (req:Request,res:Response)=>{
+  try{
+    const {proid}=req.params
+    const {isBlock}=req.body
+   const handleBlock= await handleUser.handleBlock(proid,isBlock)
+   if(handleBlock==null){
+    return res.status(HttpStatusCode.BAD_REQUEST).json({error:'Somethig went wrong in change status'})
+   }
+   return res.status(HttpStatusCode.OK).json({handleBlock})
+  }catch(err){
+    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
+  }
+}
+
+export const handleBlockGig= async (req:Request,res:Response)=>{
+  try{
+    const {proid}=req.params
+    const {isBlock}=req.body
+   const handleBlock= await handleUser.handleBlockGig(proid,isBlock)
+   if(handleBlock==null){
+    return res.status(HttpStatusCode.BAD_REQUEST).json({error:'Somethig went wrong in change status'})
+   }
+   return res.status(HttpStatusCode.OK).json({handleBlock})
+  }catch(err){
+    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
+  }
+}
+
+export const freelancerGig = async (req:Request,res:Response)=>{
+  try{
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 7;
+    const userPosts= await handleUser.freelancerGig(page,limit)
+    if(userPosts==undefined){
+      return res.status(HttpStatusCode.BAD_REQUEST).json({error:'There is no posts'})
+    }
+    return res.status(HttpStatusCode.OK).json({freelancerWork:userPosts.userPosts,totalPages:userPosts.totalPages})
+  }catch(err){
+    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
+  }
+}
+
+export const reports = async (req:Request,res:Response)=>{
+  try{
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 7;
+    const reports= await handleUser.reports(page,limit)
+    if(reports==null){
+      return res.status(HttpStatusCode.BAD_REQUEST).json({error:'Something went wrong'})
+    }
+    return res.status(HttpStatusCode.OK).json({reports:reports.reports,totalPages:reports.totalPages})
+  }catch(err){
+    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
+  }
+}
+
+
+export const dashboard = async (req:Request,res:Response)=>{
+  try{
+    const dashboard= await handleUser.dashboard()
+    if(dashboard==null){
+      return res.status(HttpStatusCode.BAD_REQUEST).json({error:'No data available'})
+    }
+    return res.status(HttpStatusCode.OK).json({dashboard})
+
+  }catch(err){
+    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
   }
 }

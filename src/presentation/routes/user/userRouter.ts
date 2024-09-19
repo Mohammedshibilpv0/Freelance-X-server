@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { editUser,editUserProfileImage, switchRole,subcategories,findUser,categories,friendList,userMessages} from '../../../controllers/user/userController';
+import { editUser,editUserProfileImage, switchRole,subcategories,findUser,categories,friendList,userMessages,getNotifications,getTransaction,handleReport} from '../../../controllers/user/userController';
 import authMiddleware from '../../../infrastructure/middleware/authMiddleware';
 
 const router=Router()
@@ -14,4 +14,7 @@ router.get('/user/:id',authMiddleware(),findUser)
 router.get('/categories',authMiddleware(),categories)
 router.get('/findmyfriends/:id',authMiddleware(),friendList)
 router.get('/messages/:id',authMiddleware(),userMessages)
+router.get('/notifications/:id',authMiddleware(),getNotifications)
+router.get('/transaction/:id',authMiddleware(),getTransaction)
+router.post('/reportuser',authMiddleware(),handleReport)
 export default router

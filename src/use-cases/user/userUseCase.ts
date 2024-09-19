@@ -4,6 +4,11 @@ import { ISubcategory } from "../../doamin/entities/SubCategory";
 import { ICategory } from "../../doamin/entities/Category";
 import { IFriendsLists } from "../../doamin/entities/IFriendsLists";
 import { IMessage } from "../../doamin/entities/Message";
+import { INotification } from "../../infrastructure/database/models/NotificationModel";
+import UserRepository from "../../infrastructure/repositories/UserRepository";
+import { IPaymentTransaction } from "../../infrastructure/database/models/TransactionModel";
+import { IReport } from "../../infrastructure/database/models/ReportModel";
+import { ReportRequestBody } from "../../doamin/entities/Report";
 
 
 export default class userUseCase{
@@ -68,5 +73,30 @@ export default class userUseCase{
     const messages= await this.userepository.getMessages(id)
     return messages
    }
-    
+
+   async getNotifications (id:string):Promise<INotification[]|null|undefined>{
+    const notifications= await this.userepository.getNotifications(id)
+    return notifications
+   }
+
+   async transactionHistory(id: string, page: number, limit: number): Promise<{ transaction: IPaymentTransaction[], totalPages: number } | null> {
+    try {
+      const { transaction, totalPages } = await this.userepository.transactionHistory(id, page, limit);
+  
+      return { transaction, totalPages };
+    } catch (error) {
+      console.error('Error fetching transaction history:', error);
+      return null;
+    }
+  }
+
+  async handleReport (data:ReportRequestBody):Promise<ReportRequestBody |null|undefined>{
+    try{
+        const report= await this.userepository.reportUser(data)
+        return report
+    }catch(err){
+        return null
+    }
+  }
+  
 }

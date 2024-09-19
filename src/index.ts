@@ -6,13 +6,13 @@ import routes from './presentation/routes';
 import cookieParser from 'cookie-parser';
 import http from 'http';
 import setupSocketIO from './utils/socket';
-import { CORSURL, PORT } from './config/env';
+import { CLIENTURL, PORT } from './config/env';
 
 const app: Application = express();
 const Port = PORT|| 3000;
 
 const corsOptions = {
-  origin: CORSURL,
+  origin: CLIENTURL,
   //  origin:'https://qnn863k8-5173.inc1.devtunnels.ms',
    methods: ['GET', 'POST', 'PUT', 'DELETE','PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],

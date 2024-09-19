@@ -14,6 +14,10 @@ import { IFriend, IFriendsLists } from '../../doamin/entities/IFriendsLists';
 import { IMessage } from '../../doamin/entities/Message';
 import Notification, { INotification } from '../database/models/NotificationModel';
 import { bucket } from '../../utils/firebase'; 
+import PaymentTransaction, { IPaymentTransaction } from '../database/models/TransactionModel';
+import { ReportRequestBody } from '../../doamin/entities/Report';
+import Report from '../database/models/ReportModel';
+import { time } from 'console';
 const { v4: uuidv4 } = require('uuid');
 
 const isValidObjectId = (id: string): boolean => {
@@ -119,47 +123,55 @@ export default class UserRepository implements IUserRepository{
 
 
 
+
 async findUsersConnections(id: string): Promise<IFriendsLists|null> {
-  try {
-    const userId = new Types.ObjectId(id);
-
-    const conversations = await Conversation.find({
-      $or: [{ user1: userId }, { user2: userId }],
-    }).sort({ updatedAt: -1 });
-
-    if (!conversations.length) {
-      return null; 
+    try {
+      const userId = new Types.ObjectId(id);
+  
+      const conversations = await Conversation.find({
+        $or: [{ user1: userId }, { user2: userId }],
+      }).sort({ updatedAt: -1 });
+  
+      if (!conversations.length) {
+        return null;
+      }
+  
+      const userIds = new Set(
+        conversations.flatMap(conversation =>
+          [conversation.user1, conversation.user2].filter(uid => !uid.equals(userId))
+        )
+      );
+  
+      const users = await UserModel.find({ _id: { $in: Array.from(userIds) } });
+      const userMap = new Map(users.map(user => [user._id.toString(), user]));
+  
+      const friends = await Promise.all(conversations.map(async conversation => {
+        const friendId = conversation.user1.equals(userId) ? conversation.user2 : conversation.user1;
+        const friend = userMap.get(friendId.toString());
+  
+        const unseenMessagesCount = await Message.countDocuments({
+          conversationId: conversation._id,
+          sender: { $ne: userId },
+          status: { $ne: 'read' }
+        });
+  
+        return {
+          id: friendId.toString(),
+          firstName: friend?.firstName || '',
+          lastName: friend?.secondName || '',
+          conversationId: conversation.id.toString(),
+          updatedAt: conversation.updatedAt,
+          lastMessage: conversation.lastMessage,
+          unseenMessagesCount 
+        };
+      }));
+  
+      return { friends };
+    } catch (err) {
+      return null;
     }
-
-    const userIds = new Set(
-      conversations.flatMap(conversation =>
-        [conversation.user1, conversation.user2].filter(uid => !uid.equals(userId))
-      )
-    );
-
-    const users = await UserModel.find({ _id: { $in: Array.from(userIds) } });
-
-    const userMap = new Map(users.map(user => [user._id.toString(), user]));
-
-    const friends = conversations.map(conversation => {
-      const friendId = conversation.user1.equals(userId) ? conversation.user2 : conversation.user1;
-      const friend = userMap.get(friendId.toString());
-
-      return {
-        id: friendId.toString(),
-        firstName: friend?.firstName || '',
-        lastName: friend?.secondName || '',  
-        conversationId:conversation.id.toString(),
-        updatedAt: conversation.updatedAt, 
-        lastMessage: conversation.lastMessage
-      };
-    });
-    return {friends};
-  } catch (err) {
-    return null;
   }
-}
-
+  
 
 async getMessages(conversationId : string): Promise<IMessage[] | null> {
     if (!isValidObjectId(conversationId)) {
@@ -168,23 +180,7 @@ async getMessages(conversationId : string): Promise<IMessage[] | null> {
     return Message.find({conversationId})
 }
 
-async  setNotification(senderId: string, receiverId: string, text: string): Promise<INotification | null> {
-    try {
-        const notification: INotification = {
-            time: new Date(),
-            senderId: new mongoose.Types.ObjectId(senderId),
-            receiverId: new mongoose.Types.ObjectId(receiverId),
-            content: text,
-        };
 
-        const newNotification = new Notification(notification);
-        const savedNotification = await newNotification.save();
-        return savedNotification;
-    } catch (error) {
-        console.error('Error setting notification:', error);
-        return null;
-    }
-}
 
 
 async updateMessage(messageId: string, status: 'sent' | 'delivered' | 'read'): Promise<IMessage | null> {
@@ -307,8 +303,94 @@ async uploadAudio(audio: Buffer): Promise<string | null> {
 
         return newMessage;
     }catch(err){
-        console.log(err)
+        return null
     }
   }
+
+  async saveNotification(senderId: string, receiverId: string, message: string, link: string,type:'message'|'payment'|'job'): Promise<INotification> {
+    return await Notification.create({senderId,receiverId,message,link,type})
+}
+async getNotifications(id: string): Promise<INotification[] | null | undefined> { 
+    try {
+       return await Notification.find({
+        receiverId: id,
+        $or: [
+            { type: { $ne: 'message' } }, // Include all notifications that are not of type 'message'
+            { type: 'message', read: false }, // Include 'message' notifications that are unread
+          ],
+      }).sort({time:-1})
+    } catch (err) {
+      return null;
+    }
+  }
+  
+
+  async changeNotificationStatus(notificationId: string, userId: string): Promise<void> {
+    await Notification.updateOne(
+        { _id: notificationId, receiverId: userId },
+        { $set: { read: true } }
+      );
+  }
+
+  async transactionHistory(id: string, page: number, limit: number): Promise<{ transaction: IPaymentTransaction[], totalPages: number }> {
+    try {
+        const skip = (page - 1) * limit;
+
+        const [transaction, totalCount] = await Promise.all([
+            PaymentTransaction.find({
+                $or: [
+                    { senderId: id },
+                    { receiverId: id }
+                ]
+            })
+            .select('_id senderId createdAt amount')
+            .populate({
+                path: 'senderId',
+                select: 'firstName secondName' 
+            })
+            .populate({
+                path: 'receiverId',
+                select: 'firstName secondName'
+            })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .exec(),
+            PaymentTransaction.countDocuments({
+                $or: [
+                    { senderId: id },
+                    { receiverId: id }
+                ]
+            }).exec()
+        ]);
+
+        const totalPages = Math.ceil(totalCount / limit);
+
+        return { transaction, totalPages };
+    } catch (error) {
+        throw error;   
+    }
+}
+
+async  reportUser(data: ReportRequestBody): Promise<ReportRequestBody | null> {
+    try {
+      if (data.customReason) {
+        data.reason = 'Other';
+      }
+  
+      const report = await Report.create(data);
+  
+      return {
+        reportedUserId: report.reportedUserId.toString(),
+        reporterUserId: report.reporterUserId.toString(),
+        reason: report.reason,
+        customReason: report.customReason || '', 
+      };
+    } catch (error) {
+      console.error('Error creating report:', error);
+      return null;
+    }
+  }
+  
 
 }

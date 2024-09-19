@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Document, Schema, Query } from "mongoose";
 import { IUserPost } from "../../../doamin/entities/UserPost";
 
 const userPostSchema = new Schema<IUserPost>({
@@ -38,13 +38,21 @@ const userPostSchema = new Schema<IUserPost>({
       isPaid: { type: Boolean, default: false },
     },
   ],
-  paymentAmount:{type:Number},
-  startBudget: { type: String, required: true },
-  endBudget: { type: String, required: true },
+  paymentAmount: { type: Number },
+  startBudget: { type: Number, required: true },
+  endBudget: { type: Number, required: true },
   keyPoints: { type: [String], required: true },
   skills: { type: [String], required: true },
   images: { type: [String], required: true },
   searchKey: { type: [String], required: true },
+  isBlock: { type: Boolean, default: false },
+  isDelete: { type: Boolean, default: false },
+});
+
+userPostSchema.pre(/^find/, function (next) {
+  const query = this as Query<any, Document>;  
+  query.where({ isDelete: false });            
+  next();
 });
 
 const UserPost = mongoose.model<IUserPost>("userPost", userPostSchema);

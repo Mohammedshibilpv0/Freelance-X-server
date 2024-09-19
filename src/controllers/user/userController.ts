@@ -2,36 +2,23 @@ import  { Request, Response } from 'express';
 import userUseCase from '../../use-cases/user/userUseCase';
 import UserRepository from '../../infrastructure/repositories/UserRepository';
 import { bucket } from '../../utils/firebase';
-import { error } from 'console';
-
+import { mapUserProfile } from '../../interface/mappers/userMapper';
+import FirebaseImageUploader from '../../utils/firebaseImageUploader';
+import { HttpStatusCode } from '../../utils/httpStatusCode';
 
 const userRepository = new UserRepository();
 const useruseCase=new userUseCase(userRepository)
+const imageUploader=new FirebaseImageUploader(bucket)
 
 export const editUser= async(req:Request,res:Response)=>{
     try{
-        const {Data}=req.body    
-         
+        const {Data}=req.body            
        let editProfile= await useruseCase.editUserProfile(Data)  
-        const userData={
-            _id:editProfile?._id,
-            role:editProfile?.role,
-            email:editProfile?.email,
-            phone:editProfile?.phone,
-            firstName:editProfile?.firstName,
-            secondName:editProfile?.secondName,
-            description:editProfile?.description,
-            skills:editProfile?.skills,
-            country:editProfile?.country,
-            profile:editProfile?.profile
-        }
-
-        
-       
        if(editProfile){
-        return res.status(200).json({message:" Successfully edited the user profile",userData})
+        const userData=mapUserProfile(editProfile)
+        return res.status(HttpStatusCode.OK).json({message:" Successfully edited the user profile",userData})
        }
-       return res.status(400).json({error:"Something wrong in edit profile please try again"})
+       return res.status(HttpStatusCode.BAD_REQUEST).json({error:"Something wrong in edit profile please try again"})
       
     }catch(err){
         return res.status(500).json({error:"internal server error"})
@@ -43,41 +30,15 @@ export const editUserProfileImage = async (req: Request, res: Response) => {
     try {
      
       const { Data } = req.body;
-      console.log(Data)
-      const parsedData = JSON.parse(Data);
-      const email = parsedData.email
+      const parsedUserData = JSON.parse(Data);
+      const email = parsedUserData.email
       if (!req.file) {
-        return res.status(400).send('No file uploaded.');
+        return res.status(HttpStatusCode.BAD_REQUEST).send('No file uploaded.');
       }
-  
-      
-      const timestamp = Date.now();
-      const originalName = req.file.originalname;
-      const newFileName = `${timestamp}${originalName}`;
-    
-      
-              
-      const blob = bucket.file(newFileName);
-      const blobStream = blob.createWriteStream({
-        metadata: {
-          contentType: req.file.mimetype
-        }
-      });
-  
-      blobStream.on('error', (err) => {
-       return res.status(500).send(err.message);
-      });
-  
-      blobStream.on('finish',async () => {
-        
-        const encodedFileName = encodeURIComponent(newFileName);
-        const profile = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedFileName}?alt=media`;
-        parsedData.profile=profile
-       await userRepository.updateUser(parsedData,email)
-       return res.status(200).send({ url: profile.trim(),message:"User profile updated" });
-      });
-  
-      blobStream.end(req.file.buffer);
+      const uploadImage= await imageUploader.uploadImage(req,email,parsedUserData)
+      if(uploadImage){
+        res.status(HttpStatusCode.OK).json({url:uploadImage.url,message:'Image changed successfully'})
+      }
   
     } catch (err) {
       console.log(err);
@@ -85,16 +46,14 @@ export const editUserProfileImage = async (req: Request, res: Response) => {
     }
   };
 
-
-
   export const switchRole =async(req:Request,res:Response)=>{
     try{
       const {action,email}=req.body
       const changeRole=await useruseCase.changeUserRole(email,action)
       if(changeRole==null){
-        return res.status(400).json({error:'User not found'})
+        return res.status(HttpStatusCode.BAD_REQUEST).json({error:'User not found'})
       }
-      return res.status(200).json({message:'Role change success'})
+      return res.status(HttpStatusCode.OK).json({message:'Role change success'})
       
     }catch(err){
       return res.status(500).json({ error: "internal server error" });
@@ -107,13 +66,13 @@ export const subcategories = async (req:Request,res:Response)=>{
     const {id}=req.params
     const subcategories=await useruseCase.getSubcategories(id)
     if(subcategories==null){      
-      return res.status(400).json({error:'No subcategory found'})
+      return res.status(HttpStatusCode.BAD_REQUEST).json({error:'No subcategory found'})
     }
-    return res.status(200).json({message:'Retrive subcategories',subcategories})
+    return res.status(HttpStatusCode.OK).json({message:'Retrive subcategories',subcategories})
 
   }catch(err:any){
     if (err.message.startsWith("Invalid category ID")) {      
-      return res.status(400).json({ message: err.message });
+      return res.status(HttpStatusCode.BAD_REQUEST).json({ message: err.message });
     }
     return res.status(500).json({ error: "internal server error" });
   }
@@ -125,13 +84,13 @@ export const findUser =async (req:Request,res:Response)=>{
 
     const user= await useruseCase.findUserById(id)
     if(user==null || undefined){
-      return res.status(400).json({error:'User Not found'})
+      return res.status(HttpStatusCode.BAD_REQUEST).json({error:'User Not found'})
     }
-    return res.status(200).json({data:user})
+    return res.status(HttpStatusCode.OK).json({data:user})
 
   }catch(err:any){
     if (err.message.startsWith("Invalid User ID")) {      
-      return res.status(400).json({ message: err.message });
+      return res.status(HttpStatusCode.BAD_REQUEST).json({ message: err.message });
     }
     return res.status(500).json({ error: "internal server error" });
   }
@@ -141,9 +100,9 @@ export const categories = async (req:Request,res:Response)=>{
   try{
     const categories= await useruseCase.categories()
     if(categories==null){
-      return res.status(400).json({error:'Categories Not found'})
+      return res.status(HttpStatusCode.BAD_REQUEST).json({error:'Categories Not found'})
     }
-    return res.status(200).json({ categories: categories})
+    return res.status(HttpStatusCode.OK).json({ categories: categories})
 
   }catch(err){
     return res.status(500).json({ error: "internal server error" });
@@ -155,9 +114,9 @@ export const friendList = async(req:Request,res:Response)=>{
     const {id}=req.params
     const list = await useruseCase.findLists(id)
     if(list==null){
-    return res.status(200).json({message:'Your friend list is empty'})
+    return res.status(HttpStatusCode.NO_CONTENT).json({message:'Your friend list is empty'})
     }
-    return res.status(200).json({list})
+    return res.status(HttpStatusCode.OK).json({list})
 
   }catch(err){
     return res.status(500).json({ error: "internal server error" }); 
@@ -169,14 +128,68 @@ export const userMessages = async (req:Request,res:Response)=>{
     const {id}=req.params
     const messages= await useruseCase.getMessages(id)
     if(messages==null){
-      return res.status(400).json({error:'Something went wrong'})
+      return res.status(HttpStatusCode.BAD_REQUEST).json({error:'Something went wrong'})
     }
-   return res.status(200).json({messages})
+   return res.status(HttpStatusCode.OK).json({messages})
   }catch(err:any){
     if (err.message.startsWith("Invalid  ID")) {      
-      return res.status(400).json({ message: err.message });
+      return res.status(HttpStatusCode.BAD_REQUEST).json({ message: err.message });
     }
     return res.status(500).json({ error: "internal server error" }); 
   }
 }
 
+export const getNotifications = async (req:Request,res:Response)=>{
+  try{
+    const {id}=req.params
+
+    const myNotifications= await useruseCase.getNotifications(id)
+    if(myNotifications==null){
+      return res.status(HttpStatusCode.BAD_REQUEST).json({error:'Something went wrong'})
+    }
+
+    return res.status(HttpStatusCode.OK).json({data:myNotifications})
+  }catch(err:any){
+    if (err.message.startsWith("Invalid ID")) {      
+      return res.status(HttpStatusCode.BAD_REQUEST).json({ message: err.message });
+    }
+    return res.status(500).json({ error: "internal server error" }); 
+  }
+  
+}
+
+
+export const getTransaction = async(req:Request,res:Response)=>{
+  try{
+    const {id}=req.params
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 4; 
+    const transactionHistory= await useruseCase.transactionHistory(id,page,limit)
+    if(transactionHistory==null){
+      return res.status(HttpStatusCode.BAD_REQUEST).json({message:'Something went wrong cannot find the transaction'})
+    }
+    return res.status(HttpStatusCode.OK).json({transactionHistory:transactionHistory.transaction,totalPages:transactionHistory.totalPages})
+  }catch(err:any){
+    if (err.message.startsWith("Invalid ID")) {      
+      return res.status(HttpStatusCode.BAD_REQUEST).json({ message: err.message });
+    }
+    return res.status(500).json({ error: "internal server error" }); 
+  }
+}
+
+
+
+export const handleReport = async(req:Request,res:Response)=>{
+  try{
+
+    const {data}=req.body
+    const reportUser= await useruseCase.handleReport(data)
+    if(reportUser==null){
+      return res.status(HttpStatusCode.BAD_REQUEST).json({error:'Error in report please try again later'})
+    }
+    return res.status(HttpStatusCode.OK).json({message:'success'})
+
+  }catch(err:any){
+    return res.status(500).json({ error: "internal server error" }); 
+    }
+}

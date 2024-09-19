@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document,Query } from "mongoose";
 import { IFreelancerGig } from "../../../doamin/entities/IFreelancerGig";
 
 const FormValuesSchema = new Schema<IFreelancerGig>({
@@ -9,6 +9,8 @@ const FormValuesSchema = new Schema<IFreelancerGig>({
   createAt: { type: Date, default: Date.now },
   subcategory: { type: String },
   status: { type: String, default: "Pending" },
+  isBlock:{type:Boolean , default:false},
+  isDelete:{type:Boolean , default:false},
   requests: [
     {
       message: { type: String, required: true },
@@ -33,9 +35,15 @@ const FormValuesSchema = new Schema<IFreelancerGig>({
   searchTags: { type: [String], required: true },
   images: { type: [String], required: true },
   price: { type: Schema.Types.Mixed, required: true },
-  paymentAmount:{type:Number}
+  paymentAmount:{type:Number},
+  
 });
 
+FormValuesSchema.pre(/^find/, function (next) {
+  const query = this as Query<any, Document>;  
+  query.where({ isDelete: false });            
+  next();
+});
 const FreelancerGig = mongoose.model<IFreelancerGig>("Gig", FormValuesSchema);
 
 export default FreelancerGig;

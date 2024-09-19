@@ -14,7 +14,9 @@ export interface IFreelancerGig {
     modules?:[GigModules]
     createAt?:Date
     paymentAmount?:number
-  }
+    isBlock?:boolean
+    isDelete?:boolean 
+   }
 
 
   export interface requestInterface{

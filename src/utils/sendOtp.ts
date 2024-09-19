@@ -1,10 +1,11 @@
 import nodemailer from 'nodemailer';
+import { NODEMAILEREMAIL, NODEMAILERPASSWORD } from '../config/env';
 
 const transporter = nodemailer.createTransport({
     service: 'Gmail',
     auth: {
-        user: 'mazziotechlounger@gmail.com',
-        pass: 'ckug ztdy qggj qorj'
+        user: NODEMAILEREMAIL,
+        pass: NODEMAILERPASSWORD
     }
 });
 
@@ -56,7 +57,7 @@ export const sendOtpEmail = async (email: string, otp: string) => {
     `;
 
     const mailOptions = {
-        from: 'mazziotechlounger@gmail.com',
+        from: NODEMAILEREMAIL,
         to: email,
         subject: "Your OTP",
         html: htmlContent

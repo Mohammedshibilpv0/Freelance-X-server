@@ -5,9 +5,9 @@ export interface IUserPost{
 projectName: string;
 description: string;
 skills: string[];
-startBudget: string;
+startBudget: Number;
 status?:string
-endBudget: string;
+endBudget: Number;
 deadline: Date;
 keyPoints: string[];
 images: string[];
@@ -20,6 +20,8 @@ modules?:[UserPostModule]
 email?:string
 userId?:string
 paymentAmount?:number
+isDelete?:boolean
+isBlock?:boolean
 }
 
 export interface requestInterface{

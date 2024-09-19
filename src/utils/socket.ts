@@ -3,18 +3,19 @@ import { Server as HttpServer } from "http";
 import UserRepository from "../infrastructure/repositories/UserRepository";
 import { IMessage } from "../doamin/entities/Message";
 import Message from "../infrastructure/database/models/Message";
-import { CORSURL } from "../config/env";
-import { timeStamp } from "console";
+import { CLIENTURL } from "../config/env";
+
 interface SocketUser {
   id: string;
   socketId: string;
 }
 
 const userrepository = new UserRepository();
+
 const initializeSocket = (server: HttpServer): Server => {
   const io = new Server(server, {
     cors: {
-      origin: CORSURL,
+      origin: CLIENTURL,
       // origin:"https://qnn863k8-5173.inc1.devtunnels.ms",
       methods: ["GET", "POST"],
     },
@@ -63,6 +64,7 @@ const initializeSocket = (server: HttpServer): Server => {
       };
       await userrepository.saveMessage(senderId, receiverId, text,false,messageId);
       if (user) {
+        io.to(user.socketId).emit('messagecount',{count:1,senderId})
         io.to(user.socketId).emit("messageContent", messages);
       }
 
@@ -83,6 +85,7 @@ const initializeSocket = (server: HttpServer): Server => {
       }
       const user = getUser(receiverId);
       if(user){
+        io.to(user.socketId).emit('messagecount',{count:1,senderId})
         io.to(user.socketId).emit("messageContent", message);
       }
     })
@@ -98,6 +101,7 @@ const initializeSocket = (server: HttpServer): Server => {
         timeStamp:new Date()
       }
       if(user){
+        io.to(user.socketId).emit('messagecount',{count:1,senderId})
         io.to(user.socketId).emit("messageContent", message);
       }
     })
@@ -122,19 +126,47 @@ const initializeSocket = (server: HttpServer): Server => {
     }
     })
 
-    socket.on("notification",async(messageData)=>{
-      const {senderId,receiverId,text}=messageData
+    socket.on("sendNotification",async(messageData)=>{
+      const {userId,receiverId,text,link,type}=messageData
       const user = getUser(receiverId);
       const notification={
-        sender:senderId,
+        sender:userId,
         receiver:receiverId,
-        text,
+        message:text,
+        link,
+        read:false,
+        type,
         time:new Date()
       }
+      await userrepository.saveNotification(userId,receiverId,text,link,'message')
       if(user){
         io.to(user.socketId).emit("notification", notification);
       }
     });
+
+    socket.on('markNotificationAsRead', async ({ notificationId, userId }) => {
+      await userrepository.changeNotificationStatus(notificationId,userId)
+      socket.emit('notificationMarkedAsRead', notificationId);
+    });
+
+    socket.on('videoCall',(data)=>{
+      const {senderId,name,receiverId,conversatioId} = data
+      const user = getUser(receiverId);
+      if(user){
+        io.to(user.socketId).emit("videocallAlert", data);
+      }
+    })
+
+    socket.on('videoDecline',(data)=>{
+      const {senderId,name,receiverId} = data
+      const user = getUser(receiverId);
+      if(user){
+        io.to(user.socketId).emit("declineVideoCall", data);
+      }
+
+    })
+    
+    
 
     socket.on("disconnect", () => {
       removeUser(socket.id);

@@ -12,7 +12,7 @@ const userSchema = new Schema<IUser>({
     createAt: { type: Date, default: Date.now },
     country: { type: String },
     skills: [{type:String}],
-    profile:{type:String},
+    profile:{type:String,default:'https://i.pinimg.com/736x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg'},
     description:{type:String},
     isAdmin:{type:Boolean,default:false},
     isBlock :{type:Boolean, default:false}

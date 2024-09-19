@@ -1,6 +1,5 @@
 import { Router } from 'express';
-import { register,generateOtp,verifyOTP,loginUser,refreshAccessTokenController,forgetPassword,verifyforgetpasswordOtp,changePassword } from '../../../controllers/user/authController';
-import authMiddleware from '../../../infrastructure/middleware/authMiddleware';
+import { register,generateOtp,verifyOTP,loginUser,refreshAccessTokenController,forgetPassword,verifyforgetpasswordOtp,changePassword, googleAuth } from '../../../controllers/user/authController';
 
 const router=Router()
 
@@ -14,5 +13,6 @@ router.post('/refresh-token',refreshAccessTokenController)
 router.post('/forgetpassword',forgetPassword)
 router.post('/verifyforgetpassword',verifyforgetpasswordOtp)
 router.post('/changepassword',changePassword)
+router.post('/googleauth/:userCredential',googleAuth)
 
 export default router

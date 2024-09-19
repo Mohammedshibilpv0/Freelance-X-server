@@ -1,10 +1,9 @@
 import { Router } from 'express';
 import multer from 'multer';
 import authMiddleware from '../../../infrastructure/middleware/authMiddleware';
-import { createGig,freelanceWorks,findSinglegig,gigs,changeStatus,requestProject,findMyRequests,myApprovedProjects,setModuleClient,setModuleFreelancer} from '../../../controllers/user/freelancerController';
-import { auth } from 'firebase-admin';
+import { createGig,freelanceWorks,findSinglegig,gigs,changeStatus,requestProject,findMyRequests,myApprovedProjects,setModuleClient,setModuleFreelancer,deleteGig} from '../../../controllers/user/freelancerController';
 const router=Router()
-const upload = multer({ storage: multer.memoryStorage() });
+
 
 
 router.post('/creategig',authMiddleware(),createGig)
@@ -17,4 +16,5 @@ router.get('/myrequests/:email',authMiddleware(),findMyRequests)
 router.get('/approved/:email',authMiddleware(),myApprovedProjects)
 router.put('/clientmodule/:id',authMiddleware(),setModuleClient)
 router.put('/freelancermodule/:id',authMiddleware(),setModuleFreelancer)
+router.put('/deleteproject/:projectId',authMiddleware(),deleteGig)
 export default router

@@ -13,7 +13,11 @@ const isValidObjectId = (id: string): boolean => {
 
 export default class ClientRepository implements IClientRepository {
   async createPost(data: IUserPost): Promise<IUserPost> {
-    data.requests=[]
+    if (data.projectName) {
+      data.projectName = data.projectName.charAt(0).toUpperCase() + data.projectName.slice(1);
+    }
+  
+    data.requests = [];
     return UserPost.create(data);
   }
 
@@ -49,18 +53,53 @@ export default class ClientRepository implements IClientRepository {
     return {posts,totalPages}
   }
 
-  async allPost(page:number,limit:number): Promise<{ posts: IUserPost[], totalPages: number }> {
-    const skip = (page - 1) * limit;
-    const [posts, totalPosts] = await Promise.all([
-      UserPost.find({status:{$ne:"Approved"}}).sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
-      UserPost.countDocuments().exec()
-    ]);
-    const totalPages = Math.ceil(totalPosts / limit);
 
-    return {posts,totalPages}
+
+async allPost(
+  page: number,
+  limit: number,
+  key: string,
+  sortBy: string,
+  sortOrder: string,
+  category: string,
+  subcategory: string
+): Promise<{ posts: IUserPost[], totalPages: number }> {
+  console.log(sortOrder)
+  const skip = (page - 1) * limit;
+  const sortField = sortBy === 'price' ? 'startBudget' : 'projectName';
+
+  const projectNameFilter = key ? { projectName: { $regex: key, $options: 'i' } } : {};
+  const categoryFilter = category ? { category } : {};
+  const subcategoryFilter = subcategory ? { subcategory } : {};
+
+  const sortObject: any = {};
+  if (sortBy) {
+      sortObject[sortField] = sortOrder == 'desc' ? -1 : 1;
   }
 
-  async requestProject(data: requestInterface, id: string): Promise<IUserPost | null> {
+  const filter = {
+      status: { $ne: "Approved" },
+      ...projectNameFilter,
+      ...categoryFilter,
+      ...subcategoryFilter,
+  };
+
+  const [posts, totalPosts] = await Promise.all([
+      UserPost.find(filter)
+          .sort(sortObject)
+          .skip(skip)
+          .limit(limit)
+          .exec(),
+      UserPost.countDocuments(filter).exec()
+  ]);
+
+  const totalPages = Math.ceil(totalPosts / limit);
+
+  return { posts, totalPages };
+}
+
+
+async requestProject(data: requestInterface, id: string): Promise<IUserPost | null> {
     const updatedUserPost = await UserPost.findByIdAndUpdate(
       data.id,
       {
@@ -80,7 +119,7 @@ export default class ClientRepository implements IClientRepository {
   }
 
 
-  async changeStatus(id: string,status:string): Promise<IUserPost | null> {
+  async changeStatus(id: string,status:string,amount:number): Promise<IUserPost | null> {
     const userPost = await UserPost.findOneAndUpdate(
         { 'requests._id': id }, 
         { $set: { 'requests.$.status': status} },
@@ -89,6 +128,7 @@ export default class ClientRepository implements IClientRepository {
 
     if(status=='Approved' && userPost){
       userPost.status=status
+      userPost.paymentAmount=amount
       await userPost.save()
     }
 
@@ -212,5 +252,15 @@ async  successPayment(token: string, projectId: string,amount:string,isPost:stri
     throw new Error('Error processing payment');
   }
 }
+
+
+ async deleteProject(projectId: string): Promise<IUserPost | null> {
+   try{
+    return await UserPost.findByIdAndUpdate(projectId,{isDelete:true})
+   }catch(err){
+    console.error('Error in delete project:', err);
+    throw new Error('Error in delete project');
+   }
+ }
 
 }

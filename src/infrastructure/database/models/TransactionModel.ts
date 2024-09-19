@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-interface IPaymentTransaction extends Document {
+export interface IPaymentTransaction extends Document {
   transactionId: string;
   receiverId: mongoose.Types.ObjectId;
   senderId: mongoose.Types.ObjectId;

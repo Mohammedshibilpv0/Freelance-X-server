@@ -55,8 +55,10 @@ export default class ClientUseCase {
     return gig;
   }
 
-  async allGigs(page:number,limit:number):Promise<{ posts: IFreelancerGig[], totalPages: number }>{
-    const {posts,totalPages}= await this.freelancerrepository.allGigs(page,limit)
+  async allGigs(page:number,limit:number,searchKey:string,sortBy:string,sortOrder:string,category:string,subcategory:string):Promise<{ posts: IFreelancerGig[], totalPages: number }>{
+      const categoryName= await this.freelancerrepository.findCategoryName(category)
+      const subCategories= await this.freelancerrepository.findSubCategoryName(subcategory)
+      const {posts,totalPages}= await this.freelancerrepository.allGigs(page,limit,searchKey,sortBy,sortOrder,categoryName?.name??'',subCategories?.name??'')
     return{ posts,totalPages}
   }
 
@@ -73,8 +75,8 @@ export default class ClientUseCase {
   }
 
 
-  async changeProjectStatus (id:string,status:string):Promise<IFreelancerGig|null>{
-    return await this.freelancerrepository.changeStatus(id,status)
+  async changeProjectStatus (id:string,status:string,amount:number):Promise<IFreelancerGig|null>{
+    return await this.freelancerrepository.changeStatus(id,status,amount)
    }
 
 
@@ -112,6 +114,11 @@ export default class ClientUseCase {
   }
   async setProjectModuleFreelancer (id:string,data:object):Promise<IFreelancerGig|null>{
     return await this.freelancerrepository.setModuleFreelancerPost(id,data)
+  }
+  
+  async deleteProject (projectId:string):Promise<IFreelancerGig|null>{
+    const deleteProject=await this.freelancerrepository.deleteProject(projectId)
+    return deleteProject
   }
 
 }

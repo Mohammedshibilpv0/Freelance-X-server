@@ -5,6 +5,8 @@ import { ICategory } from "../doamin/entities/Category";
 import { IFriendsLists } from "../doamin/entities/IFriendsLists";
 import { IMessage } from "../doamin/entities/Message";
 import { INotification } from "../infrastructure/database/models/NotificationModel";
+import { IPaymentTransaction } from "../infrastructure/database/models/TransactionModel";
+import { ReportRequestBody } from "../doamin/entities/Report";
 
 export interface IUserRepository {
     create(user:IUser):Promise<IUser>
@@ -19,9 +21,13 @@ export interface IUserRepository {
     saveMessage(senderId:string,receiverId:string,message:string,initial:boolean,messageId:string):Promise<any|null>
     findUsersConnections(id:string):Promise<IFriendsLists|null>
     getMessages(conversationId:string):Promise<IMessage[]|null>
-    setNotification(senderId:string,receiverId:string,text:string):Promise<INotification|null>
     updateMessage(id: string, status: 'sent' | 'delivered' | 'read'): Promise<IMessage | null> 
     uploadAudio(audio:Buffer):Promise<any>
     saveAudio(senderId:string,receiverId:string,audio:string,messageId:string):Promise<any>
     saveImage(file:string,senderId:string,receiverId:string,messageId:string):Promise<any>
+    saveNotification(senderId:string,receiverId:string,message:string,link:string,type:'message'|'payment'|'job'):Promise<INotification>
+    getNotifications(id:string):Promise<INotification[]|null|undefined>
+    changeNotificationStatus(notificationId:string,userId:string):Promise<void>
+    transactionHistory(id:string,page:number,limit:number):Promise<{transaction:IPaymentTransaction[],totalPages:number}>
+    reportUser(data:ReportRequestBody):Promise<ReportRequestBody |null>
 }
