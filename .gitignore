@@ -1,3 +1,4 @@
 node_modules
 .env
 src/utils/fir-87d6a-firebase-adminsdk-j32ju-f886c86b6b.json
+dist
