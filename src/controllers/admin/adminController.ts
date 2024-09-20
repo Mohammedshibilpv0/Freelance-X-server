@@ -17,12 +17,12 @@ const adminrepository = new AdminRepository();
 const handleUser = new findallusers(adminrepository);
 const handleCategory = new CategoryUseCase(adminrepository);
 
+let COOKIESECURE='production'
 const cookieOptions = {
   httpOnly: true,
-  secure: false,
-  sameSite: 'strict' as const,
+  secure: COOKIESECURE === 'production', 
+  sameSite:  'none' as const , 
 };
-
 
 
 export const adminLogin = async (req: Request, res: Response) => {

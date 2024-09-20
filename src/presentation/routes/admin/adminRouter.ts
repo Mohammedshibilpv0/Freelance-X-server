@@ -27,6 +27,6 @@ router.patch('/user-posts/block/:proid',authMiddleware(),handleBlockUserPost)
 router.get('/freelancerGig',authMiddleware(true),freelancerGig)
 router.patch('/freelancer-gig/block/:proid',authMiddleware(true),handleBlockGig)
 router.get('/reports',authMiddleware(true),reports)
-router.get('/dashboard',dashboard)
+router.get('/dashboard',authMiddleware(true),dashboard)
 
 export default router
