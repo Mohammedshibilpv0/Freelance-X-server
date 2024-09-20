@@ -2,12 +2,16 @@ import { Response, NextFunction } from 'express';
 import { verifyAccessToken } from '../../interface/security/jwt'; 
 import { CustomRequest } from './customReq';
 import UserRepository from '../repositories/UserRepository';
+import { COOKIESECURE } from '../../config/env';
 
 const userRepository = new UserRepository();
 
 const authMiddleware = (requireAdmin: boolean = false) => {
+
+
   return async (req: CustomRequest, res: Response, next: NextFunction) => {
     let  token = req.cookies.accessToken; 
+    console.log(COOKIESECURE)
     console.log(token)
     if (!token) {
       return res.status(401).json({ error: 'No token provided' });
