@@ -12,7 +12,7 @@ import forgetPasswordUsecase from '../../use-cases/auth/forgetPasswordUsecase';
 import { mapUserProfile } from '../../interface/mappers/userMapper';
 import { HttpStatusCode } from '../../utils/httpStatusCode';
 import GoogleAuthUseCase from '../../use-cases/auth/googleAuth';
-import { COOKIESECURE } from '../../config/env';
+require('dotenv').config()
 
 const userRepository= new UserRepository()
 const createotp=new CreateOtp(userRepository)
@@ -23,7 +23,7 @@ const googleuseCase= new GoogleAuthUseCase(userRepository)
 
 const cookieOptions = {
   httpOnly: true,
-  secure: COOKIESECURE === 'production', 
+  secure: process.env.COOKIESECURE === 'production', 
   sameSite:  'none' as const , 
 };
 
