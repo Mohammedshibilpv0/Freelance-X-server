@@ -30,4 +30,5 @@ export interface IUserRepository {
     changeNotificationStatus(notificationId:string,userId:string):Promise<void>
     transactionHistory(id:string,page:number,limit:number):Promise<{transaction:IPaymentTransaction[],totalPages:number}>
     reportUser(data:ReportRequestBody):Promise<ReportRequestBody |null>
+    updateUserProfile(profile:string,email:string):Promise<IUser|null>
 }

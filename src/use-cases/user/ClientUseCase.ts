@@ -22,8 +22,6 @@ export default class ClientUseCase {
     
     if (data.email) {
       const checkUser = await this.userepository.findByEmail(data.email);
-      console.log(data.email)
-      console.log(checkUser)
       const updatedData = { ...data, userId: checkUser?._id };
       const addPost = await this.clientrepository.createPost(updatedData);
       if (addPost == null) {

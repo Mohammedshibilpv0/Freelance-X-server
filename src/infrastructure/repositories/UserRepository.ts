@@ -37,6 +37,10 @@ export default class UserRepository implements IUserRepository{
     
     }
 
+    async updateUserProfile(profile: string, email: string): Promise<IUser | null> {
+        return UserModel.findOneAndUpdate({email},{profile})
+    }
+
     async findByEmail(email:string):Promise<IUser|null>{        
         return await UserModel.findOne({email}).exec()
     

@@ -30,18 +30,16 @@ export const editUserProfileImage = async (req: Request, res: Response) => {
     try {
      
       const { Data } = req.body;
-      const parsedUserData = JSON.parse(Data);
-      const email = parsedUserData.email
       if (!req.file) {
         return res.status(HttpStatusCode.BAD_REQUEST).send('No file uploaded.');
       }
-      const uploadImage= await imageUploader.uploadImage(req,email,parsedUserData)
+      const uploadImage= await imageUploader.uploadImage(req,Data,true)
       if(uploadImage){
         res.status(HttpStatusCode.OK).json({url:uploadImage.url,message:'Image changed successfully'})
       }
   
     } catch (err) {
-      console.log(err);
+      console.log(err)
       return res.status(500).json({ error: "internal server error" });
     }
   };

@@ -27,7 +27,6 @@ const authMiddleware = (requireAdmin: boolean = false) => {
           }
 
           if (requireAdmin && !user.isAdmin) {
-            console.log(user.isAdmin)
             return res.status(403).json({ error: 'Access denied. Admins only.' });
           }
 

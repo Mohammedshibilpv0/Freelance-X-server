@@ -13,7 +13,7 @@ class FirebaseImageUploader {
       this.bucket = bucket;
     }
   
-    async uploadImage(req: Request,email:string|undefined,userData:IUser|undefined): Promise<{ url: string } | null> {
+    async uploadImage(req: Request,email:string|undefined,userProfile:boolean|undefined): Promise<{ url: string } | null> {
       return new Promise((resolve, reject) => {
         if (!req.file) {
           return reject(new Error('No file uploaded.'));
@@ -38,8 +38,8 @@ class FirebaseImageUploader {
           try {
             const encodedFileName = encodeURIComponent(newFileName);
             const profile = `https://firebasestorage.googleapis.com/v0/b/${this.bucket.name}/o/${encodedFileName}?alt=media`;
-            if(email && userData){
-                await userRepository.updateUser(userData,email)
+            if(email && userProfile){
+                await userRepository.updateUserProfile(profile,email)
             }
             resolve({ url: profile.trim() });
           } catch (err) {
