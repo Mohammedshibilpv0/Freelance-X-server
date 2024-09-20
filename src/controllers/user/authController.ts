@@ -89,7 +89,7 @@ export const verifyOTP = async (req: Request, res: Response) => {
     let { email, otp } = req.body;
     
     const userDataString = await redisClient.get(`email${email}`);
-        
+        console.log(userDataString)
     if (!userDataString) {
       return res.status(HttpStatusCode.BAD_REQUEST).json({ error: 'User not found in session' });
     }

@@ -12,11 +12,10 @@ const app: Application = express();
 const Port = PORT|| 3000;
 
 const corsOptions = {
-  origin: CLIENTURL,
-  //  origin:'https://qnn863k8-5173.inc1.devtunnels.ms',
+   origin: CLIENTURL,
    methods: ['GET', 'POST', 'PUT', 'DELETE','PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+   allowedHeaders: ['Content-Type', 'Authorization'],
+   credentials: true
 };
 
 
