@@ -20,10 +20,10 @@ const forgetPasswordusecase=new forgetPasswordUsecase(userRepository)
 const registerUser = new RegisterUser(userRepository);
 const googleuseCase= new GoogleAuthUseCase(userRepository)
 
-
+let COOKIESECURE='production'
 const cookieOptions = {
   httpOnly: true,
-  secure: process.env.COOKIESECURE === 'production', 
+  secure: COOKIESECURE === 'production', 
   sameSite:  'none' as const , 
 };
 
