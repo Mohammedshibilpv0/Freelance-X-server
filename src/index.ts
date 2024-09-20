@@ -6,7 +6,7 @@ import routes from './presentation/routes';
 import cookieParser from 'cookie-parser';
 import http from 'http';
 import setupSocketIO from './utils/socket';
-import { CLIENTURL, PORT } from './config/env';
+import { CLIENTURL, PORT,FIREBASEBUCKET} from './config/env';
 
 const app: Application = express();
 const Port = PORT|| 3000;
@@ -29,6 +29,8 @@ app.use(morgan('dev'));
 app.use('/', routes);
 
 
+
+console.log('FIREBASEBUCKET',FIREBASEBUCKET)
 const server = http.createServer(app);
 const io = setupSocketIO(server);
 
