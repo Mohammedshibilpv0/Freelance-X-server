@@ -11,8 +11,6 @@ const authMiddleware = (requireAdmin: boolean = false) => {
 
   return async (req: CustomRequest, res: Response, next: NextFunction) => {
     let  token = req.cookies.accessToken; 
-    console.log(process.env.COOKIESECURE)
-    console.log(token)
     if (!token) {
       return res.status(401).json({ error: 'No token provided' });
     }
