@@ -6,7 +6,7 @@ import { FIREBASEBUCKET } from '../config/env';
 console.log('FIREBASEBUCKET',FIREBASEBUCKET)
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-  storageBucket: 'gs://fir-87d6a.appspot.com/',
+  storageBucket: 'fir-87d6a.appspot.com/',
 });
 
 const bucket = admin.storage().bucket();
