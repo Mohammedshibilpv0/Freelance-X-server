@@ -8,3 +8,4 @@ export const FIREBASEBUCKET=process.env.FIREBASEBUCKET
 export const NODEMAILEREMAIL=process.env.NODEMAILEREMAIL
 export const NODEMAILERPASSWORD=process.env.NODEMAILERPASSWORD
 export const CRYPTOJSSECRET=process.env.CRYPTOJSSECRET
+export const COOKIESECURE=process.env.COOKIESECURE

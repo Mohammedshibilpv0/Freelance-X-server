@@ -12,6 +12,7 @@ import forgetPasswordUsecase from '../../use-cases/auth/forgetPasswordUsecase';
 import { mapUserProfile } from '../../interface/mappers/userMapper';
 import { HttpStatusCode } from '../../utils/httpStatusCode';
 import GoogleAuthUseCase from '../../use-cases/auth/googleAuth';
+import { COOKIESECURE } from '../../config/env';
 
 const userRepository= new UserRepository()
 const createotp=new CreateOtp(userRepository)
@@ -21,9 +22,8 @@ const googleuseCase= new GoogleAuthUseCase(userRepository)
 
 const cookieOptions = {
   httpOnly: true,
-  secure: 'production', // Secure only in production
-  sameSite:'none', // Specify exact types for sameSite
-  // domain: process.env.NODE_ENV === 'production' ? '.freelancex.site' : undefined, // Set domain for production if cross-subdomain cookies are needed
+  secure: COOKIESECURE === 'production', 
+  sameSite: COOKIESECURE === 'production' ? 'none' as const : 'lax' as const, 
 };
 
 export const register = async (req: Request, res: Response) => {
