@@ -23,7 +23,7 @@ const googleuseCase= new GoogleAuthUseCase(userRepository)
 const cookieOptions = {
   httpOnly: true,
   secure: COOKIESECURE === 'production', 
-  sameSite: COOKIESECURE === 'production' ? 'none' as const : 'lax' as const, 
+  sameSite:  'none' as const , 
 };
 
 export const register = async (req: Request, res: Response) => {
