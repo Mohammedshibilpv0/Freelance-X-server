@@ -5,6 +5,7 @@ const categorySchema = new Schema<ICategory>({
   name: { type: String, required: true },
   description: { type: String, required: true },
   isDeleted: { type: Boolean, default: false }, 
+  image:{type:String}
 });
 
 categorySchema.pre<Query<ICategory, Document>>(/^find/, function (next) {

@@ -6,6 +6,9 @@ import { adminLogin,listallusers,updateUserStatus,addCategory,getCategory,findCa
 } from '../../../controllers/admin/adminController';
 import adminMiddleware from '../../../infrastructure/middleware/authMiddleware';
 import authMiddleware from '../../../infrastructure/middleware/authMiddleware';
+import multer from 'multer';
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 const  router=Router()
 
@@ -13,8 +16,8 @@ router.post('/auth/login',adminLogin)
 router.get('/users',adminMiddleware(true),listallusers)
 router.put('/updateUserBlockStatus',adminMiddleware(true),updateUserStatus)
 router.get('/categories',authMiddleware(true),getCategory)
-router.post('/category',adminMiddleware(true),addCategory)
-router.put('/category',adminMiddleware(true),editCategory)
+router.post('/category',upload.single('image'),adminMiddleware(true),addCategory)
+router.put('/category/:categoryId',upload.single('image'),adminMiddleware(true),editCategory)
 router.get('/findcategory/:id',authMiddleware(true),findCategory)
 router.put('/deletecategory/:id',adminMiddleware(true),deleteCategory)
 router.post('/subcategory',adminMiddleware(true),addSubcategory)
@@ -28,5 +31,9 @@ router.get('/freelancerGig',authMiddleware(true),freelancerGig)
 router.patch('/freelancer-gig/block/:proid',authMiddleware(true),handleBlockGig)
 router.get('/reports',authMiddleware(true),reports)
 router.get('/dashboard',authMiddleware(true),dashboard)
+
+
+
+
 
 export default router

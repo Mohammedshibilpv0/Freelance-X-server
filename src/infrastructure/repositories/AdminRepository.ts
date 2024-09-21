@@ -2,7 +2,7 @@ import UserModel from "../database/models/UserModel";
 import mongoose from "mongoose";
 import { IUserSummary } from "../../doamin/entities/User";
 import { IAdminRepository } from "../../interface/IAdminRepository";
-import { ICategory } from "../../doamin/entities/Category";
+import { ICategory, IEditCategory } from "../../doamin/entities/Category";
 import Category from "../database/models/CategoryModel";
 import SubCategory from "../database/models/Subcategory";
 import { ISubcategory } from "../../doamin/entities/SubCategory";
@@ -38,9 +38,13 @@ export default class AdminRepository implements IAdminRepository {
     return { users, totalPages };
   }
 
-  async addCategory(name: string, description: string): Promise<ICategory> {
-    return await Category.create({ name, description });
+  async addCategory(name: string, description: string,image:string): Promise<ICategory> {
+    return await Category.create({ name, description,image });
   }
+
+  async findAlreadyCategory(name:string):Promise<ICategory|null>{
+    return await Category.findOne({ name });
+  } 
 
   async findcategory(name: string): Promise<ICategory[]> {
     return await Category.find({ name });
@@ -68,12 +72,20 @@ export default class AdminRepository implements IAdminRepository {
   async editCategory(
     categoryId: string,
     name: string,
-    description: string
+    description: string,
+    image?:string|undefined
   ): Promise<ICategory | null> {
+    const editCategoryObj:IEditCategory={
+      name,
+      description
+    }
+    if(image){
+      editCategoryObj.image=image
+    }
     if (!isValidObjectId(categoryId)) {
       throw new Error(`Invalid category ID: ${categoryId}`);
     }
-    return await Category.findByIdAndUpdate(categoryId, { name, description });
+    return await Category.findByIdAndUpdate(categoryId, editCategoryObj);
   }
 
   async deleteCategory(categoryId: string): Promise<ICategory | null> {

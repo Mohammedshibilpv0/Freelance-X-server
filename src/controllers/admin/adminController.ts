@@ -10,7 +10,13 @@ import findallusers from "../../use-cases/admin/handleIUser";
 import AdminRepository from "../../infrastructure/repositories/AdminRepository";
 import CategoryUseCase from "../../use-cases/admin/CategoryUseCae";
 import { HttpStatusCode } from "../../utils/httpStatusCode";
+import FirebaseImageUploader from "../../utils/firebaseImageUploader";
+import { bucket } from "../../utils/firebase";
+import { uploadImage } from "../user/ClientContoller";
+import { error } from "console";
 
+
+const imageUploader = new FirebaseImageUploader(bucket);
 const userRepository = new UserRepository();
 const checkuser = new CheckuserExists(userRepository);
 const adminrepository = new AdminRepository();
@@ -45,13 +51,12 @@ export const adminLogin = async (req: Request, res: Response) => {
     
     res.cookie('accessToken', accessToken, {
       ...cookieOptions,
-      maxAge: 15 * 60 * 1000,
     });
 
 
     res.cookie('refreshToken', refreshToken, {
       ...cookieOptions,
-      maxAge: 7 * 24 * 60 * 60 * 1000, 
+
     });
     return res
       .status(HttpStatusCode.OK)
@@ -95,11 +100,18 @@ export const updateUserStatus = async (req: Request, res: Response) => {
 export const addCategory = async (req: Request, res: Response) => {
   try {
     const { name, description } = req.body;
+    if(!req.file){
+      return res.status(HttpStatusCode.BAD_REQUEST).json({error:'No image Uploaded'})
+    }
 
+    const image:{url:string}|null=await imageUploader.uploadImage(req,undefined,undefined)
     if (name == "" || description == "") {
       return res.status(HttpStatusCode.BAD_REQUEST).json({ error: "Name and Description are required" });
     }
-    const addCategory = await handleCategory.addCategory(name, description);
+    if(!image?.url){
+      return res.status(HttpStatusCode.BAD_REQUEST).json({error:'No image Uploaded'})
+    }
+    const addCategory = await handleCategory.addCategory(name, description,image?.url);
     if (addCategory?.error) {   
       return res.status(HttpStatusCode.BAD_REQUEST).json({ error: addCategory.error });
     }
@@ -140,13 +152,30 @@ export const findCategory = async (req: Request, res: Response) => {
 
 export const editCategory = async (req: Request, res: Response) => {
   try {
-    const { categoryId, name, description } = req.body;
-    const editCategoryResult = await handleCategory.editCategory(
+    const {categoryId}=req.params
+    const {name, description } = req.body;
+    let editCategoryResult
+    if(!req.file){
+       editCategoryResult = await handleCategory.editCategory(
+        categoryId,
+        name,
+        description,
+        undefined
+      );
+    }else{
+      const image:{url:string}|null=await imageUploader.uploadImage(req,undefined,undefined)
+      if(!image?.url){
+        return res.status(400).json({error:'Failed to upload image'})
+      }  
+      editCategoryResult = await handleCategory.editCategory(
       categoryId,
       name,
-      description
+      description,
+      image.url
     );
 
+    }
+    
     if (typeof editCategoryResult === "string") {
       return res.status(HttpStatusCode.BAD_REQUEST).json({ error: editCategoryResult });
     } else if (editCategoryResult.message === "edited successfully") {
@@ -155,6 +184,7 @@ export const editCategory = async (req: Request, res: Response) => {
       return res.status(404).json({ error: editCategoryResult.message });
     }
   } catch (err: any) {
+    console.log(err)
     if (err.message.startsWith("Invalid category ID")) {
       return res.status(HttpStatusCode.BAD_REQUEST).json({ message: err.message });
     }

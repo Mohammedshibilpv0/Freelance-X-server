@@ -2,6 +2,7 @@ import { ICategory } from "../../doamin/entities/Category";
 import { ISubcategory } from "../../doamin/entities/SubCategory";
 import AdminRepository from "../../infrastructure/repositories/AdminRepository";
 
+
 interface EditCategoryResponse {
   message: string;
   editCategory?: object;
@@ -15,7 +16,9 @@ interface AddCategoryResult {
 }
 
 
+
 type EditCategoryResult = EditCategoryResponse | string;
+
 
 export default class CategoryUseCase {
   private adminrepository: AdminRepository;
@@ -24,13 +27,12 @@ export default class CategoryUseCase {
     this.adminrepository = adminrepository;
   }
 
-  async addCategory(name: string, description: string): Promise<AddCategoryResult> {
+  async addCategory(name: string, description: string,image:string): Promise<AddCategoryResult> {
     const checkCategoryExists = await this.adminrepository.findcategory(name);
-    
     if (checkCategoryExists.length > 0) {      
       return { error: "Category Already Exists" };
     }
-    const addCategory = await this.adminrepository.addCategory(name, description);
+    const addCategory = await this.adminrepository.addCategory(name, description,image);
     if (addCategory) {
       return { message: "Category created successfully", category: addCategory };
     }
@@ -50,14 +52,17 @@ export default class CategoryUseCase {
     return findCategory
   }
 
-  async  editCategory(categoryId: string, name: string, description: string): Promise<EditCategoryResult> {
-    const findCategoryAlready = await this.adminrepository.findcategory(name);
-  
-    const isDuplicate = findCategoryAlready.some(category => category.name === name && category._id !== categoryId);   
+  async  editCategory(categoryId: string, name: string, description: string,image:string|undefined): Promise<EditCategoryResult> {
+    const findCategoryAlready = await this.adminrepository.findAlreadyCategory(name);
+    const isDuplicate=findCategoryAlready?.name==name && findCategoryAlready._id!==categoryId
     if (isDuplicate) {
+    console.log("isDuplicate")
+
       return 'Category Already Exists';
     } else { 
-      let editCategory = await this.adminrepository.editCategory(categoryId, name, description);
+    console.log("Non isDuplicate")
+
+      let editCategory = await this.adminrepository.editCategory(categoryId, name, description,image?image:undefined);
       if (editCategory) {
         return { message: 'edited successfully', editCategory };
       } else {

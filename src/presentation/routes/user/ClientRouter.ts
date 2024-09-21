@@ -11,7 +11,7 @@ router.post('/upload',upload.single('image'),authMiddleware(),uploadImage)
 router.post('/createclientpost', authMiddleware(),createPost);
 router.get('/getuserspost/:email',authMiddleware(),userPosts)
 router.get('/post/:id',authMiddleware(),getClientPost)
-router.get('/posts',listPosts)
+router.get('/posts',authMiddleware(),listPosts)
 router.post('/requestproject',authMiddleware(),requestProject)
 router.put('/projectstatus/:id/:status',authMiddleware(),changeStatus)
 router.get('/myrequests/:email',authMiddleware(),findMyRequests)
