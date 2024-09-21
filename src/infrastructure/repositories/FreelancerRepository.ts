@@ -20,6 +20,14 @@ export default class FreelancerRepository implements IFreelancerRepository {
     }
     return await FreelancerGig.create(data);
   }
+  
+  async editProject(id: string, data: IFreelancerGig): Promise<IFreelancerGig | null | undefined> {
+  try{
+    return FreelancerGig.findByIdAndUpdate(id,data)
+  }catch(err){
+    return null
+  }  
+  }
 
   async findCategoryName (id:string):Promise<ICategory|null>{
     if (!isValidObjectId(id)) {

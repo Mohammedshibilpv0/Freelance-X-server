@@ -33,6 +33,14 @@ export default class ClientUseCase {
     }
   }
 
+  async editPost(id:string,data:IUserPost): Promise<IUserPost | undefined | null>{
+    try{
+      return await this.clientrepository.editPost(id,data)
+    }catch(er){
+      return null
+    }
+  }
+
 
   async findPost(id:string,isRequest:boolean):Promise<IUserPost|IFreelancerGig|null>{
     const post=await this.clientrepository.findPost(id,isRequest)

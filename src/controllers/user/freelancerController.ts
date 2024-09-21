@@ -3,6 +3,7 @@ import FreelancerRepository from "../../infrastructure/repositories/FreelancerRe
 import FreelancerUseCase from "../../use-cases/user/FreelancerUseCase";
 import UserRepository from "../../infrastructure/repositories/UserRepository";
 import { HttpStatusCode } from "../../utils/httpStatusCode";
+import { error } from "console";
 
 
 const freelancerrepository = new FreelancerRepository();
@@ -53,6 +54,43 @@ export const createGig = async (req: Request, res: Response) => {
     return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "internal server error" });
   }
 };
+
+export const editGig = async (req:Request,res:Response)=>{
+  try{
+    const {id}=req.params
+    const {
+      formData: {
+        projectName,
+        description,
+        category,
+        subcategory,
+        searchTags,
+        images,
+        deadline,
+        price,
+      },
+    } = req.body;
+
+    const edit = await freelancerusecase.editGig(id,{
+      projectName,
+      description,
+      category,
+      subcategory,
+      searchTags,
+      images,
+      deadline,
+      price,
+    });
+    
+    if(edit==undefined ||edit==null){
+     return res.status(HttpStatusCode.BAD_REQUEST).json({error:'Something wrong in edit freelancer gig'})
+    }
+    return res.status(HttpStatusCode.OK).json({message:'Project edited successfully'})
+  }catch(err){
+    console.log(err)
+    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "internal server error" })
+  }
+}
 
 export const freelanceWorks = async (req: Request, res: Response) => {
   try {
@@ -242,8 +280,8 @@ export const deleteGig = async (req:Request,res:Response)=>{
     return res.status(HttpStatusCode.OK).json({message:'Project deleted successfully',posts:deleteProject})
 
   }catch(err){
-    console.log(err)
     return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "internal server error" })
   
   }
 }
+

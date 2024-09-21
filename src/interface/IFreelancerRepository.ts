@@ -18,5 +18,6 @@ export interface IFreelancerRepository{
     findCategoryName (id:string):Promise<ICategory|null>
     findSubCategoryName(id:string):Promise<ISubcategory|null>
     deleteProject(projectId:string):Promise<IFreelancerGig|null>
+    editProject(id:string,data:IFreelancerGig):Promise<IFreelancerGig|null|undefined>
 
 }

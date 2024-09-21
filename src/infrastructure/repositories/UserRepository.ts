@@ -316,13 +316,12 @@ async uploadAudio(audio: Buffer): Promise<string | null> {
 }
 async getNotifications(id: string): Promise<INotification[] | null | undefined> { 
     try {
-       return await Notification.find({
+       let a= await Notification.find({
         receiverId: id,
-        $or: [
-            { type: { $ne: 'message' } }, // Include all notifications that are not of type 'message'
-            { type: 'message', read: false }, // Include 'message' notifications that are unread
-          ],
+        
       }).sort({time:-1})
+      console.log(a)
+      return a
     } catch (err) {
       return null;
     }

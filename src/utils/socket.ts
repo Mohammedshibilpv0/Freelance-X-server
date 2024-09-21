@@ -127,6 +127,7 @@ const initializeSocket = (server: HttpServer): Server => {
     })
 
     socket.on("sendNotification",async(messageData)=>{
+      console.log(messageData)
       const {userId,receiverId,text,link,type}=messageData
       const user = getUser(receiverId);
       const notification={

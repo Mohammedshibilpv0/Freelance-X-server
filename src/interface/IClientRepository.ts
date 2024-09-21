@@ -16,4 +16,5 @@ export interface IClientRepository{
     listApproved(id:string,page:number,limit:number):Promise<{ posts: IFreelancerGig[], totalPages: number }>
     successPayment(token:string,id:string,amount:string,isPost:string):Promise<any>
     deleteProject(projectId:string):Promise<IUserPost|null>
+    editPost(id:string,data:IUserPost): Promise<IUserPost | undefined | null>
 }

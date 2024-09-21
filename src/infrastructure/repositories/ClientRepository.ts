@@ -21,6 +21,14 @@ export default class ClientRepository implements IClientRepository {
     return UserPost.create(data);
   }
 
+  async editPost(id: string, data: IUserPost): Promise<IUserPost | undefined | null> {
+    try{
+      return await UserPost.findByIdAndUpdate(id,data)
+    }catch(err){
+      return null
+    }
+  }
+
   async findPost(id: string,isRequest:boolean): Promise<IUserPost |IFreelancerGig |null> {
     if (!isValidObjectId(id)) {
       throw new Error(`Invalid post ID: ${id}`);

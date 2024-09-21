@@ -1,7 +1,6 @@
 import { Router } from 'express';
-import multer from 'multer';
 import authMiddleware from '../../../infrastructure/middleware/authMiddleware';
-import { createGig,freelanceWorks,findSinglegig,gigs,changeStatus,requestProject,findMyRequests,myApprovedProjects,setModuleClient,setModuleFreelancer,deleteGig} from '../../../controllers/user/freelancerController';
+import { createGig,freelanceWorks,findSinglegig,gigs,changeStatus,requestProject,findMyRequests,myApprovedProjects,setModuleClient,setModuleFreelancer,deleteGig,editGig} from '../../../controllers/user/freelancerController';
 const router=Router()
 
 
@@ -17,4 +16,5 @@ router.get('/approved/:email',authMiddleware(),myApprovedProjects)
 router.put('/clientmodule/:id',authMiddleware(),setModuleClient)
 router.put('/freelancermodule/:id',authMiddleware(),setModuleFreelancer)
 router.put('/deleteproject/:projectId',authMiddleware(),deleteGig)
+router.put('/editgig/:id',authMiddleware(),editGig)
 export default router

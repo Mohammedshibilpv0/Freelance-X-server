@@ -55,10 +55,53 @@ export const createPost = async (req: Request, res: Response) => {
     }
     return res.status(HttpStatusCode.OK).json({ message: "successfully post added" });
   } catch (err) {
-    console.log(err)
     return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "internal server error" });
   }
 };
+
+
+export const editPost = async (req:Request,res:Response)=>{
+  try{
+    const {id}=req.params
+    const {
+      formData: {
+        projectName,
+      description,
+      skills,
+      startBudget,
+      endBudget,
+      deadline,
+      keyPoints,
+      images,
+      searchKey,
+      category,
+      subcategory,
+      },
+    } = req.body;
+
+    const editPost = await clientusecase.editPost(id,{
+      projectName,
+      description,
+      skills,
+      startBudget,
+      endBudget,
+      deadline,
+      keyPoints,
+      images,
+      category,
+      searchKey,
+      subcategory,
+      
+    });
+    if(editPost==undefined ||editPost==null){
+      return res.status(HttpStatusCode.BAD_REQUEST).json({error:'Something wrong in edit freelancer gig'})
+     }
+     return res.status(HttpStatusCode.OK).json({message:'Project edited successfully'})
+
+  }catch(err){
+    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: "internal server error" });
+  }
+}
 
 export const uploadImage = async (req: Request, res: Response) => {
   try {
@@ -275,3 +318,4 @@ export const deleteProject = async (req:Request,res:Response)=>{
     return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error' });
   }
 }
+

@@ -31,6 +31,15 @@ export default class ClientUseCase {
     }
   }
 
+  async editGig (id:string,data:IFreelancerGig):Promise<IFreelancerGig | null | undefined>{
+    try{
+      const editProject=await this.freelancerrepository.editProject(id,data)
+      return editProject
+    }catch(err){
+      return null;
+    }
+  }
+
   async listFreelancerWork(
     email: string,page:number,limit:number
   ): Promise<{ posts: IFreelancerGig[], totalPages: number }| null | undefined> {
